@@ -44,9 +44,9 @@ def amazon_api():
         search_items_request = SearchItemsRequest(
             partner_tag=ASSOCIATE_TAG,
             partner_type=PartnerType.ASSOCIATES,
-            keywords=moto,
-            search_index=All,
-            item_count=10,
+            keywords=keywords,
+            search_index=search_index,
+            item_count=item_count,
             resources=search_items_resource,
         )
     except ValueError as e:
