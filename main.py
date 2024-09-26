@@ -12,8 +12,8 @@ app = Flask(__name__)
 ACCESS_KEY = os.getenv("ACCESS_KEY")
 SECRET_KEY = os.getenv("SECRET_KEY")
 ASSOCIATE_TAG = os.getenv("ASSOCIATE_TAG")
-API_HOST = "webservices.amazon.com"
-API_REGION = "us-east-1"
+API_HOST = "webservices.amazon.fr"
+API_REGION = "eu-west-1"
 
 # Initialisation de l'API Amazon PAAPI avec les variables d'environnement
 def get_amazon_api_client():
