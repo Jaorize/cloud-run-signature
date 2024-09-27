@@ -1,25 +1,37 @@
+import os  # Importer le module os pour accéder aux variables d'environnement
 from flask import Flask, request, jsonify
 from python_amazon_paapi import AmazonApi, AmazonException
 
+# Initialisation de l'application Flask
 app = Flask(__name__)
 
-# Récupérer les variables d'environnement
-ACCESS_KEY = "YOUR_ACCESS_KEY"
-SECRET_KEY = "YOUR_SECRET_KEY"
-ASSOCIATE_TAG = "YOUR_ASSOCIATE_TAG"
-REGION = "us"  # Modifier selon ta région (ex: 'us', 'uk', etc.)
+# Récupérer les variables d'environnement définies dans Google Cloud Run
+ACCESS_KEY = os.getenv("ACCESS_KEY")
+SECRET_KEY = os.getenv("SECRET_KEY")
+ASSOCIATE_TAG = os.getenv("ASSOCIATE_TAG")
 
-# Initialiser l'API Amazon
+# Vérification que les variables d'environnement ont été récupérées correctement
+if not ACCESS_KEY or not SECRET_KEY or not ASSOCIATE_TAG:
+    raise ValueError("L'une des variables d'environnement nécessaires (ACCESS_KEY, SECRET_KEY, ASSOCIATE_TAG) n'est pas définie.")
+
+# Initialiser l'API Amazon avec les clés d'environnement
 amazon = AmazonApi(ACCESS_KEY, SECRET_KEY, ASSOCIATE_TAG, REGION)
 
 @app.route('/search', methods=['POST'])
 def amazon_search():
+    # Récupérer les données envoyées dans la requête POST (ex: {"keywords": "laptop"})
     data = request.get_json()
     keywords = data.get('keywords', '')
+
+    # Si aucun mot-clé n'est fourni, retourner une erreur
+    if not keywords:
+        return jsonify({"error": "Keywords are required for searching"}), 400
 
     try:
         # Rechercher des articles via l'API Amazon
         products = amazon.search_items(keywords=keywords, search_index="All", item_count=5)
+        
+        # Préparer la réponse avec les informations des produits
         results = []
         for product in products:
             results.append({
@@ -27,9 +39,12 @@ def amazon_search():
                 "url": product.detail_page_url,
                 "price": product.price_and_currency
             })
+        
         return jsonify(results)
     except AmazonException as e:
+        # Gérer les erreurs de l'API Amazon
         return jsonify({"error": str(e)}), 500
 
+# Lancer l'application Flask sur le port 8080 (nécessaire pour Google Cloud Run)
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=8080)
