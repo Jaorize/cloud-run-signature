@@ -15,6 +15,8 @@ app = Flask(__name__)
 ACCESS_KEY = os.getenv("ACCESS_KEY")
 SECRET_KEY = os.getenv("SECRET_KEY")
 ASSOCIATE_TAG = os.getenv("ASSOCIATE_TAG")
+API_HOST = "webservices.amazon.fr"
+API_REGION = "eu-west-1"
 
 # Vérification que les variables d'environnement ont été récupérées correctement
 if not ACCESS_KEY or not SECRET_KEY or not ASSOCIATE_TAG:
