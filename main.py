@@ -1,6 +1,12 @@
 import os  # Importer le module os pour accéder aux variables d'environnement
 from flask import Flask, request, jsonify
-from python_amazon_paapi import AmazonApi, AmazonException
+from sdk.paapi5_python_sdk.api.default_api import DefaultApi
+from sdk.paapi5_python_sdk.models.partner_type import PartnerType
+from sdk.paapi5_python_sdk.models.search_items_request import SearchItemsRequest
+from sdk.paapi5_python_sdk.models.search_items_resource import SearchItemsResource
+from sdk.paapi5_python_sdk.rest import ApiException
+
+
 
 # Initialisation de l'application Flask
 app = Flask(__name__)
