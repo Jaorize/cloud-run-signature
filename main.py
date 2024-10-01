@@ -1,4 +1,5 @@
-import os  # Importer le module os pour accéder aux variables d'environnement
+import os
+import sys
 from flask import Flask, request, jsonify
 from sdk.paapi5_python_sdk.api.default_api import DefaultApi
 from sdk.paapi5_python_sdk.models.partner_type import PartnerType
@@ -6,7 +7,11 @@ from sdk.paapi5_python_sdk.models.search_items_request import SearchItemsRequest
 from sdk.paapi5_python_sdk.models.search_items_resource import SearchItemsResource
 from sdk.paapi5_python_sdk.rest import ApiException
 
+# Importer l'API Amazon et les exceptions depuis python-amazon-paapi
+from python_amazon_paapi import AmazonApi, AmazonException
 
+# Ajouter le chemin de `sdk` pour les modules
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), 'sdk')))
 
 # Initialisation de l'application Flask
 app = Flask(__name__)
@@ -15,15 +20,13 @@ app = Flask(__name__)
 ACCESS_KEY = os.getenv("ACCESS_KEY")
 SECRET_KEY = os.getenv("SECRET_KEY")
 ASSOCIATE_TAG = os.getenv("ASSOCIATE_TAG")
-API_HOST = "webservices.amazon.fr"
-API_REGION = "eu-west-1"
 
 # Vérification que les variables d'environnement ont été récupérées correctement
 if not ACCESS_KEY or not SECRET_KEY or not ASSOCIATE_TAG:
     raise ValueError("L'une des variables d'environnement nécessaires (ACCESS_KEY, SECRET_KEY, ASSOCIATE_TAG) n'est pas définie.")
 
 # Initialiser l'API Amazon avec les clés d'environnement
-amazon = AmazonApi(ACCESS_KEY, SECRET_KEY, ASSOCIATE_TAG, REGION)
+amazon = AmazonApi(ACCESS_KEY, SECRET_KEY, ASSOCIATE_TAG)
 
 @app.route('/search', methods=['POST'])
 def amazon_search():
