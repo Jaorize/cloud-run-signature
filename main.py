@@ -7,8 +7,6 @@ from sdk.paapi5_python_sdk.models.search_items_request import SearchItemsRequest
 from sdk.paapi5_python_sdk.models.search_items_resource import SearchItemsResource
 from sdk.paapi5_python_sdk.rest import ApiException
 
-# Importer l'API Amazon et les exceptions depuis python-amazon-paapi
-from python_amazon_paapi import AmazonApi, AmazonException
 
 # Ajouter le chemin de `sdk` pour les modules
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), 'sdk')))

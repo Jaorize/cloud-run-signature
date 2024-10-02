@@ -14,6 +14,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copier le reste des fichiers du projet
 COPY . .
 
+# Ajouter le dossier sdk au PYTHONPATH
+ENV PYTHONPATH="${PYTHONPATH}:/app/sdk"
+
 # Exposer le port sur lequel l'application va s'exécuter
 EXPOSE 8080
 
