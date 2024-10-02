@@ -4,11 +4,11 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), 'sdk')))
 import os
 import sys
 from flask import Flask, request, jsonify
-from sdk.paapi5_python_sdk.api.default_api import DefaultApi
-from sdk.paapi5_python_sdk.models.partner_type import PartnerType
-from sdk.paapi5_python_sdk.models.search_items_request import SearchItemsRequest
-from sdk.paapi5_python_sdk.models.search_items_resource import SearchItemsResource
-from sdk.paapi5_python_sdk.rest import ApiException
+from paapi5_python_sdk.api.default_api import DefaultApi
+from paapi5_python_sdk.models.partner_type import PartnerType
+from paapi5_python_sdk.models.search_items_request import SearchItemsRequest
+from paapi5_python_sdk.models.search_items_resource import SearchItemsResource
+from paapi5_python_sdk.rest import ApiException
 
 
 # Initialisation de l'application Flask
