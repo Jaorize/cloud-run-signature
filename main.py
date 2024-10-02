@@ -1,3 +1,6 @@
+# Ajouter le chemin de `sdk` pour les modules
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), 'sdk')))
+
 import os
 import sys
 from flask import Flask, request, jsonify
@@ -7,9 +10,6 @@ from sdk.paapi5_python_sdk.models.search_items_request import SearchItemsRequest
 from sdk.paapi5_python_sdk.models.search_items_resource import SearchItemsResource
 from sdk.paapi5_python_sdk.rest import ApiException
 
-
-# Ajouter le chemin de `sdk` pour les modules
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), 'sdk')))
 
 # Initialisation de l'application Flask
 app = Flask(__name__)
