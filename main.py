@@ -3,6 +3,8 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), 'sdk')))
 
 import os
 import sys
+# Ajouter le chemin de `sdk` pour les modules
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), 'sdk')))
 from flask import Flask, request, jsonify
 from paapi5_python_sdk.api.default_api import DefaultApi
 from paapi5_python_sdk.models.partner_type import PartnerType
