@@ -1,13 +1,14 @@
 
 
 import os
-import sys
 from flask import Flask, request, jsonify
 from paapi5_python_sdk.api.default_api import DefaultApi
 from paapi5_python_sdk.models.partner_type import PartnerType
 from paapi5_python_sdk.models.search_items_request import SearchItemsRequest
 from paapi5_python_sdk.models.search_items_resource import SearchItemsResource
 from paapi5_python_sdk.rest import ApiException
+from paapi5_python_sdk import AmazonApi
+
 
 
 # Initialisation de l'application Flask
