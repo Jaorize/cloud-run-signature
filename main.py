@@ -51,9 +51,9 @@ def amazon_search():
     try:
         # Configurer la requête avec les ressources nécessaires
         resources = [
-            SearchItemsResource.ITEM_INFOTITLE,
-            SearchItemsResource.ITEM_INFODETAIL_PAGE_URL,
-            SearchItemsResource.OFFERSLISTINGSPRICE
+            SearchItemsResource.ITEMINFO_TITLE,
+            SearchItemsResource.ITEMINFO_BYLINEINFO,
+            SearchItemsResource.OFFERS_LISTINGS_PRICE
         ]
 
         # Construire la requête pour rechercher des articles
