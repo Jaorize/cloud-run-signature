@@ -1,8 +1,17 @@
 import os
+import sys
 from flask import Flask, request, jsonify
+
+# Ajouter le répertoire SDK au PYTHONPATH si nécessaire
+sdk_path = os.path.abspath(os.path.join(os.path.dirname(__file__), 'sdk'))
+if sdk_path not in sys.path:
+    sys.path.append(sdk_path)
+
+# Importer les modules du SDK après avoir ajouté le chemin
 from paapi5_python_sdk.api_client import ApiClient
 from paapi5_python_sdk.api.default_api import DefaultApi
 from paapi5_python_sdk.models.search_items_request import SearchItemsRequest
+from paapi5_python_sdk.models.partner_type import PartnerType
 from paapi5_python_sdk.models.search_items_resource import SearchItemsResource
 from paapi5_python_sdk.rest import ApiException
 
