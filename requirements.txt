@@ -3,4 +3,4 @@ Werkzeug==2.0.3
 gunicorn==20.1.0
 requests==2.26.0
 -e ./sdk/paapi5_python_sdk
-six>=1.15.0
+six==1.16.0
