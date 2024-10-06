@@ -1,24 +1,26 @@
-# Utiliser une image Python officielle comme base
-FROM python:3.9-slim
+# Utiliser une image Python officielle
+FROM python:3.11
 
-# Créer un répertoire de travail pour l'application
+# Définir le répertoire de travail
 WORKDIR /app
 
-# Copier les fichiers requirements.txt et installer les dépendances
+# Copier le fichier requirements.txt dans le conteneur
 COPY requirements.txt .
 
-RUN pip install --upgrade pip
-
+# Installer les dépendances via pip
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copier le reste des fichiers du projet
+# Copier le SDK dans le conteneur
+COPY sdk/paapi5_python_sdk/ /app/sdk/paapi5_python_sdk/
+
+# Ajouter le SDK au PYTHONPATH pour qu'il soit accessible
+ENV PYTHONPATH "/app/sdk/paapi5_python_sdk:$PYTHONPATH"
+
+# Copier le reste du code de l'application dans le conteneur
 COPY . .
 
-# Ajouter le dossier sdk au PYTHONPATH
-ENV PYTHONPATH="${PYTHONPATH}:/app/sdk"
-
-# Exposer le port sur lequel l'application va s'exécuter
+# Exposer le port 8080
 EXPOSE 8080
 
-# Commande pour démarrer Gunicorn avec Flask
-CMD ["gunicorn", "-b", "0.0.0.0:8080", "main:app"]
+# Lancer l'application avec Gunicorn
+CMD ["gunicorn", "-b", ":8080", "main:app"]
