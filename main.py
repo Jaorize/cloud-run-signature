@@ -1,14 +1,6 @@
 import os
 import sys
 
-# Ajouter des instructions de débogage pour vérifier les variables d'environnement
-print(f"ACCESS_KEY: {os.getenv('ACCESS_KEY')}")
-print(f"SECRET_KEY: {os.getenv('SECRET_KEY')}")
-print(f"ASSOCIATE_TAG: {os.getenv('ASSOCIATE_TAG')}")
-
-# Forcer la fermeture du script après le débogage pour vérifier les logs
-sys.exit(0)
-
 from flask import Flask, request, jsonify
 
 # Ajouter le répertoire SDK au PYTHONPATH si nécessaire
