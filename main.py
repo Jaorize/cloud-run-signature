@@ -93,16 +93,22 @@ class AWSV4Signer:
 
         return headers
 
-# Créer une instance de l'ApiClient
-client = ApiClient(
-    access_key=ACCESS_KEY,
-    secret_key=SECRET_KEY,
-    host='webservices.amazon.fr',  # URL de l'API, ajustez selon la région
-    region='eu-west-1'  # Remplacez par votre région AWS, comme 'us-west-2' ou 'eu-west-1'
-)
+# Créer une instance de l'ApiClient avec la configuration initiale
+client = None
 
-# Vérifier les valeurs lors de l'initialisation de l'ApiClient
-print(f"ApiClient initialized with access_key: {ACCESS_KEY}, secret_key: {SECRET_KEY}, host: 'webservices.amazon.fr', region: 'eu-west-1'")
+def initialize_client():
+    global client
+    if client is None:
+        client = ApiClient(
+            access_key=ACCESS_KEY,
+            secret_key=SECRET_KEY,
+            host='webservices.amazon.fr',  # URL de l'API, ajustez selon la région
+            region='eu-west-1'  # Remplacez par votre région AWS, comme 'us-west-2' ou 'eu-west-1'
+        )
+        print(f"ApiClient initialized with access_key: {ACCESS_KEY}, secret_key: {SECRET_KEY}, host: 'webservices.amazon.fr', region: 'eu-west-1'")
+
+# Initialiser le client dès le lancement de l'application
+initialize_client()
 
 # Créer une instance de l'API Amazon avec le client
 amazon = DefaultApi(client)
@@ -165,6 +171,9 @@ def amazon_search():
         headers = signer.get_authorization_header()
         # Ajouter les en-têtes de signature au client
         client.default_headers.update(headers)
+
+        # Vérifier les clés d'API avant d'envoyer la requête
+        print(f"[DEBUG] Access Key: {client.access_key}, Secret Key: {client.secret_key}")
 
         # Rechercher des articles via l'API Amazon
         response = amazon.search_items(search_request)
