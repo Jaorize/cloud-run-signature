@@ -131,7 +131,7 @@ class ApiClient(object):
         if self.access_key is None or self.secret_key is None:
             raise ValueError("Missing Credentials (Access Key and SecretKey). Please specify credentials.")
 
-     print(f"[DEBUG] Calling API with access_key: {self.access_key}, secret_key: {self.secret_key}, host: {self.host}")
+    print(f"[DEBUG] Calling API with access_key: {self.access_key}, secret_key: {self.secret_key}, host: {self.host}")
 
         config = self.configuration
 
