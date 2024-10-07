@@ -10,6 +10,7 @@ from multiprocessing.pool import ThreadPool
 import os
 import re
 import tempfile
+import threading  # Ajout pour gérer les threads de manière asynchrone
 import six
 from six.moves.urllib.parse import quote
 
@@ -126,16 +127,41 @@ class ApiClient(object):
             return content_types[0]
 
     def call_api(
-            self, resource_path, method, api_name, path_params=None,
+            self, resource_path, method, api_name=None, path_params=None,
             query_params=None, header_params=None, body=None, post_params=None,
-            files=None, response_type=None, auth_settings=None,
+            files=None, response_type=None, auth_settings=None, async_req=None,
             _return_http_data_only=None, collection_formats=None,
             _preload_content=True, _request_timeout=None):
+        """
+        Appel générique de l'API qui gère les appels synchrones et asynchrones.
 
+        :param resource_path: Chemin de la ressource dans l'API.
+        :param method: Méthode HTTP à utiliser pour l'appel (ex: 'GET', 'POST').
+        :param api_name: Nom de l'API appelée.
+        :param path_params: Path parameters in the url.
+        :param query_params: Query parameters in the url.
+        :param header_params: Header parameters to be placed in the request header.
+        :param body: Request body.
+        :param post_params: Request post form parameters.
+        :param files: Files to include in the request.
+        :param response_type: Type of response data.
+        :param auth_settings: Authentication settings.
+        :param async_req: Whether to execute the request asynchronously.
+        :param _return_http_data_only: Response data without head status code and headers.
+        :param collection_formats: Dictionary of collection formats for path, query, header, and post parameters.
+        :param _preload_content: If False, the urllib3.HTTPResponse object will be returned without reading/decoding response data. Default is True.
+        :param _request_timeout: Timeout setting for this request. If one number provided, it will be total request timeout. It can also be a pair (tuple) of (connection, read) timeouts.
+        :return:
+            If async_req parameter is True,
+            the request will be called asynchronously.
+            The method will return the request thread.
+            If async_req is False or missing,
+            then the method will return the response directly.
+        """
         if self.access_key is None or self.secret_key is None:
             raise ValueError("Missing Credentials (Access Key and SecretKey). Please specify credentials.")
 
-        print(f"[DEBUG] Calling API with access_key: {self.access_key}, secret_key: {self.secret_key}, host: {self.host}, resource_path: {resource_path}")
+        print(f"[DEBUG] Calling API with access_key: {self.access_key}, secret_key: {self.secret_key}, host: {self.host}")
 
         config = self.configuration
 
@@ -145,14 +171,11 @@ class ApiClient(object):
         if self.cookie:
             header_params['Cookie'] = self.cookie
         if header_params:
-            print(f"[DEBUG] Headers before serialization: {header_params}")
             header_params = self.sanitize_for_serialization(header_params)
             header_params = dict(self.parameters_to_tuples(header_params, collection_formats))
-            print(f"[DEBUG] Headers after serialization: {header_params}")
 
         # path parameters
         if path_params:
-            print(f"[DEBUG] Path params: {path_params}")
             path_params = self.sanitize_for_serialization(path_params)
             path_params = self.parameters_to_tuples(path_params, collection_formats)
             for k, v in path_params:
@@ -163,49 +186,51 @@ class ApiClient(object):
 
         # query parameters
         if query_params:
-            print(f"[DEBUG] Query params before serialization: {query_params}")
             query_params = self.sanitize_for_serialization(query_params)
             query_params = self.parameters_to_tuples(query_params, collection_formats)
-            print(f"[DEBUG] Query params after serialization: {query_params}")
 
         # post parameters
         if post_params or files:
-            print(f"[DEBUG] Post params or files before serialization: {post_params}")
             post_params = self.prepare_post_parameters(post_params, files)
             post_params = self.sanitize_for_serialization(post_params)
             post_params = self.parameters_to_tuples(post_params, collection_formats)
-            print(f"[DEBUG] Post params or files after serialization: {post_params}")
 
         # auth setting
-        print(f"[DEBUG] Headers before auth: {header_params}")
         self.update_params_for_auth(header_params, query_params, auth_settings, api_name, method, body, resource_path)
-        print(f"[DEBUG] Headers after auth: {header_params}")
 
         # body
         if body:
-            print(f"[DEBUG] Body before serialization: {body}")
             body = self.sanitize_for_serialization(body)
-            print(f"[DEBUG] Body after serialization: {body}")
 
         # request url
         url = "https://" + self.host + resource_path
-        print(f"[DEBUG] Request URL: {url}")
 
-        # perform request and return response
+        # Appel asynchrone
+        if async_req:
+            # Créer un thread séparé pour exécuter la requête
+            thread = threading.Thread(target=self.request, args=(method, url),
+                                      kwargs={
+                                          'query_params': query_params,
+                                          'headers': header_params,
+                                          'post_params': post_params,
+                                          'body': body,
+                                          '_preload_content': _preload_content,
+                                          '_request_timeout': _request_timeout
+                                      })
+            thread.start()
+            return thread  # Retourner le thread pour un suivi asynchrone
+
+        # Appel synchrone par défaut
         response_data = self.request(
             method, url, query_params=query_params, headers=header_params,
             post_params=post_params, body=body,
             _preload_content=_preload_content,
             _request_timeout=_request_timeout)
 
-        print(f"[DEBUG] Response status: {response_data.status}")
-        print(f"[DEBUG] Response headers: {response_data.getheaders()}")
-
         self.last_response = response_data
 
         return_data = response_data
         if _preload_content:
-            # deserialize response data
             if response_type:
                 return_data = self.deserialize(response_data, response_type)
             else:
