@@ -42,7 +42,7 @@ client = ApiClient(
 )
 
 # Ajoutez ce print statement pour vérifier les valeurs lors de l'initialisation de l'ApiClient
-    print(f"ApiClient initialized with access_key: {ACCESS_KEY}, secret_key: {SECRET_KEY}, host: 'webservices.amazon.fr',region: 'eu-west-1'")
+print(f"ApiClient initialized with access_key: {ACCESS_KEY}, secret_key: {SECRET_KEY}, host: 'webservices.amazon.fr',region: 'eu-west-1'")
 
 # Créer une instance de l'API Amazon avec le client
 amazon = DefaultApi(client)
