@@ -125,7 +125,7 @@ class ApiClient(object):
         else:
             return content_types[0]
 
-    def __call_api(
+    def call_api(
             self, resource_path, method, api_name, path_params=None,
             query_params=None, header_params=None, body=None, post_params=None,
             files=None, response_type=None, auth_settings=None,
