@@ -102,6 +102,9 @@ class ApiClient(object):
         self.host = host
         self.region = region
 
+# Ajouter des impressions pour vérifier les valeurs des paramètres
+    print(f"[DEBUG] Initializing ApiClient with access_key: {access_key}, secret_key: {secret_key}, host: {host}, region: {region}")
+
     def __del__(self):
         self.pool.close()
         self.pool.join()
@@ -127,6 +130,8 @@ class ApiClient(object):
 
         if self.access_key is None or self.secret_key is None:
             raise ValueError("Missing Credentials (Access Key and SecretKey). Please specify credentials.")
+
+  print(f"[DEBUG] Calling API with access_key: {self.access_key}, secret_key: {self.secret_key}, host: {self.host}")
 
         config = self.configuration
 

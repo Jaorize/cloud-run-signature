@@ -28,6 +28,11 @@ ASSOCIATE_TAG = os.getenv("ASSOCIATE_TAG")
 if not ACCESS_KEY or not SECRET_KEY or not ASSOCIATE_TAG:
     raise ValueError("L'une des variables d'environnement nécessaires (ACCESS_KEY, SECRET_KEY, ASSOCIATE_TAG) n'est pas définie.")
 
+# Ajoutez ce print statement pour vérifier les valeurs des variables d'environnement
+print(f"ACCESS_KEY: {ACCESS_KEY}")
+print(f"SECRET_KEY: {SECRET_KEY}")
+print(f"ASSOCIATE_TAG: {ASSOCIATE_TAG}")
+
 # Initialiser l'ApiClient avec les clés d'API
 client = ApiClient(
     access_key=ACCESS_KEY,
@@ -35,6 +40,9 @@ client = ApiClient(
     host='webservices.amazon.fr',  # URL d'API, ajustez selon la région
     region='eu-west-1'  # Remplacez par votre région AWS, comme 'us-west-2' ou 'eu-west-1'
 )
+
+# Ajoutez ce print statement pour vérifier les valeurs lors de l'initialisation de l'ApiClient
+print(f"ApiClient initialized with access_key: {ACCESS_KEY}, secret_key: {SECRET_KEY}, host: 'webservices.amazon.fr', region: 'eu-west-1'")
 
 # Créer une instance de l'API Amazon avec le client
 amazon = DefaultApi(client)
