@@ -1,6 +1,8 @@
 import os
 import sys
-
+import hashlib
+import hmac
+from datetime import datetime
 from flask import Flask, request, jsonify
 
 # Ajouter le répertoire SDK au PYTHONPATH si nécessaire
@@ -33,6 +35,67 @@ print(f"ACCESS_KEY: {ACCESS_KEY}")
 print(f"SECRET_KEY: {SECRET_KEY}")
 print(f"ASSOCIATE_TAG: {ASSOCIATE_TAG}")
 
+# Classe pour gérer la signature AWS Signature Version 4
+class AWSV4Signer:
+    def __init__(self, access_key, secret_key, region, service, host, method, uri, payload):
+        self.access_key = access_key
+        self.secret_key = secret_key
+        self.region = region
+        self.service = service
+        self.host = host
+        self.method = method
+        self.uri = uri
+        self.payload = payload
+
+    def sign(self, key, msg):
+        return hmac.new(key, msg.encode('utf-8'), hashlib.sha256).digest()
+
+    def get_signature_key(self, date_stamp):
+        k_date = self.sign(('AWS4' + self.secret_key).encode('utf-8'), date_stamp)
+        k_region = self.sign(k_date, self.region)
+        k_service = self.sign(k_region, self.service)
+        k_signing = self.sign(k_service, 'aws4_request')
+        return k_signing
+
+    def get_authorization_header(self):
+        # Create a date for headers and the credential string
+        t = datetime.utcnow()
+        amz_date = t.strftime('%Y%m%dT%H%M%SZ')
+        date_stamp = t.strftime('%Y%m%d')  # Date w/o time, used in credential scope
+
+        # Create canonical request
+        canonical_uri = self.uri
+        canonical_querystring = ''
+        canonical_headers = 'host:{}\nx-amz-date:{}\n'.format(self.host, amz_date)
+        signed_headers = 'host;x-amz-date'
+        payload_hash = hashlib.sha256(self.payload.encode('utf-8')).hexdigest()
+        canonical_request = '{}\n{}\n{}\n{}\n{}\n{}'.format(
+            self.method, canonical_uri, canonical_querystring, canonical_headers, signed_headers, payload_hash)
+
+        # Create the string to sign
+        algorithm = 'AWS4-HMAC-SHA256'
+        credential_scope = '{}/{}/{}/aws4_request'.format(date_stamp, self.region, self.service)
+        string_to_sign = '{}\n{}\n{}\n{}'.format(
+            algorithm, amz_date, credential_scope, hashlib.sha256(canonical_request.encode('utf-8')).hexdigest())
+
+        # Create the signing key using the function defined above.
+        signing_key = self.get_signature_key(date_stamp)
+
+        # Sign the string_to_sign using the signing_key
+        signature = hmac.new(signing_key, string_to_sign.encode('utf-8'), hashlib.sha256).hexdigest()
+
+        # Add signing information to the request headers
+        authorization_header = '{} Credential={}/{}, SignedHeaders={}, Signature={}'.format(
+            algorithm, self.access_key, credential_scope, signed_headers, signature)
+
+        headers = {
+            'Authorization': authorization_header,
+            'x-amz-date': amz_date,
+            'Content-Type': 'application/json'
+        }
+
+        return headers
+
 # Initialiser l'ApiClient avec les clés d'API
 client = ApiClient(
     access_key=ACCESS_KEY,
@@ -46,6 +109,18 @@ print(f"ApiClient initialized with access_key: {ACCESS_KEY}, secret_key: {SECRET
 
 # Créer une instance de l'API Amazon avec le client
 amazon = DefaultApi(client)
+
+# Créer une instance de la classe AWSV4Signer
+signer = AWSV4Signer(
+    access_key=ACCESS_KEY,
+    secret_key=SECRET_KEY,
+    region='eu-west-1',
+    service='ProductAdvertisingAPI',
+    host='webservices.amazon.fr',
+    method='POST',
+    uri='/paapi5/searchitems',
+    payload=''
+)
 
 @app.route('/search', methods=['POST'])
 def amazon_search():
@@ -86,6 +161,10 @@ def amazon_search():
             resources=resources
         )
 
+        # Ajouter la signature aux en-têtes de la requête
+        headers = signer.get_authorization_header()
+        client.default_headers.update(headers)
+
         # Rechercher des articles via l'API Amazon
         response = amazon.search_items(search_request)
 
@@ -103,11 +182,9 @@ def amazon_search():
             return jsonify({"message": "No results found"}), 404
 
     except ApiException as e:
-        # Gérer les erreurs de l'API Amazon
         print(f"[ERROR] API Exception: {str(e)}")  # Ajout de log pour débogage
         return jsonify({"error": str(e)}), 500
     except Exception as e:
-        # Gérer les autres exceptions générales
         print(f"[ERROR] General Exception: {str(e)}")  # Ajout de log pour débogage
         return jsonify({"error": "An unexpected error occurred. Please try again later."}), 500
 
