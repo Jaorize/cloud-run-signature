@@ -30,7 +30,7 @@ ASSOCIATE_TAG = os.getenv("ASSOCIATE_TAG")
 if not ACCESS_KEY or not SECRET_KEY or not ASSOCIATE_TAG:
     raise ValueError("L'une des variables d'environnement nécessaires (ACCESS_KEY, SECRET_KEY, ASSOCIATE_TAG) n'est pas définie.")
 
-# Ajoutez ce print statement pour vérifier les valeurs des variables d'environnement
+# Afficher les valeurs des variables d'environnement pour vérifier leur initialisation
 print(f"ACCESS_KEY: {ACCESS_KEY}")
 print(f"SECRET_KEY: {SECRET_KEY}")
 print(f"ASSOCIATE_TAG: {ASSOCIATE_TAG}")
@@ -61,7 +61,7 @@ class AWSV4Signer:
         # Create a date for headers and the credential string
         t = datetime.utcnow()
         amz_date = t.strftime('%Y%m%dT%H%M%SZ')
-        date_stamp = t.strftime('%Y%m%d')  # Date w/o time, used in credential scope
+        date_stamp = t.strftime('%Y%m%d')  # Date sans l'heure, utilisé dans la portée des informations d'identification
 
         # Create canonical request
         canonical_uri = self.uri
@@ -93,7 +93,7 @@ class AWSV4Signer:
 
         return headers
 
-# Créer une instance de l'ApiClient avec la configuration initiale
+# Créer une instance de l'ApiClient
 client = ApiClient(
     access_key=ACCESS_KEY,
     secret_key=SECRET_KEY,
@@ -101,7 +101,7 @@ client = ApiClient(
     region='eu-west-1'  # Remplacez par votre région AWS, comme 'us-west-2' ou 'eu-west-1'
 )
 
-# Ajoutez ce print statement pour vérifier les valeurs lors de l'initialisation de l'ApiClient
+# Vérifier les valeurs lors de l'initialisation de l'ApiClient
 print(f"ApiClient initialized with access_key: {ACCESS_KEY}, secret_key: {SECRET_KEY}, host: 'webservices.amazon.fr', region: 'eu-west-1'")
 
 # Créer une instance de l'API Amazon avec le client
@@ -158,10 +158,13 @@ def amazon_search():
             resources=resources
         )
 
-        # Ajouter la signature aux en-têtes de la requête
-        signer.payload = search_request.to_str()  # Mettre à jour le payload avec le contenu de la requête
+        # Mettre à jour le payload pour la signature
+        signer.payload = search_request.to_str()
+
+        # Générer les en-têtes de signature
         headers = signer.get_authorization_header()
-        client.default_headers.update(headers)  # Ajouter les en-têtes de signature au client
+        # Ajouter les en-têtes de signature au client
+        client.default_headers.update(headers)
 
         # Rechercher des articles via l'API Amazon
         response = amazon.search_items(search_request)
