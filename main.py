@@ -66,17 +66,15 @@ class AWSV4Signer:
         # Create canonical request
         canonical_uri = self.uri
         canonical_querystring = ''
-        canonical_headers = 'host:{}\nx-amz-date:{}\n'.format(self.host, amz_date)
+        canonical_headers = f'host:{self.host}\nx-amz-date:{amz_date}\n'
         signed_headers = 'host;x-amz-date'
         payload_hash = hashlib.sha256(self.payload.encode('utf-8')).hexdigest()
-        canonical_request = '{}\n{}\n{}\n{}\n{}\n{}'.format(
-            self.method, canonical_uri, canonical_querystring, canonical_headers, signed_headers, payload_hash)
+        canonical_request = f'{self.method}\n{canonical_uri}\n{canonical_querystring}\n{canonical_headers}\n{signed_headers}\n{payload_hash}'
 
         # Create the string to sign
         algorithm = 'AWS4-HMAC-SHA256'
-        credential_scope = '{}/{}/{}/aws4_request'.format(date_stamp, self.region, self.service)
-        string_to_sign = '{}\n{}\n{}\n{}'.format(
-            algorithm, amz_date, credential_scope, hashlib.sha256(canonical_request.encode('utf-8')).hexdigest())
+        credential_scope = f'{date_stamp}/{self.region}/{self.service}/aws4_request'
+        string_to_sign = f'{algorithm}\n{amz_date}\n{credential_scope}\n{hashlib.sha256(canonical_request.encode("utf-8")).hexdigest()}'
 
         # Create the signing key using the function defined above.
         signing_key = self.get_signature_key(date_stamp)
@@ -85,8 +83,7 @@ class AWSV4Signer:
         signature = hmac.new(signing_key, string_to_sign.encode('utf-8'), hashlib.sha256).hexdigest()
 
         # Add signing information to the request headers
-        authorization_header = '{} Credential={}/{}, SignedHeaders={}, Signature={}'.format(
-            algorithm, self.access_key, credential_scope, signed_headers, signature)
+        authorization_header = f'{algorithm} Credential={self.access_key}/{credential_scope}, SignedHeaders={signed_headers}, Signature={signature}'
 
         headers = {
             'Authorization': authorization_header,
@@ -96,21 +93,21 @@ class AWSV4Signer:
 
         return headers
 
-# Initialiser l'ApiClient avec les clés d'API
+# Créer une instance de l'ApiClient avec la configuration initiale
 client = ApiClient(
     access_key=ACCESS_KEY,
     secret_key=SECRET_KEY,
-    host='webservices.amazon.fr',  # URL d'API, ajustez selon la région
+    host='webservices.amazon.fr',  # URL de l'API, ajustez selon la région
     region='eu-west-1'  # Remplacez par votre région AWS, comme 'us-west-2' ou 'eu-west-1'
 )
 
 # Ajoutez ce print statement pour vérifier les valeurs lors de l'initialisation de l'ApiClient
-print(f"ApiClient initialized with access_key: {ACCESS_KEY}, secret_key: {SECRET_KEY}, host: 'webservices.amazon.fr',region: 'eu-west-1'")
+print(f"ApiClient initialized with access_key: {ACCESS_KEY}, secret_key: {SECRET_KEY}, host: 'webservices.amazon.fr', region: 'eu-west-1'")
 
 # Créer une instance de l'API Amazon avec le client
 amazon = DefaultApi(client)
 
-# Créer une instance de la classe AWSV4Signer
+# Créer une instance de la classe AWSV4Signer pour la signature
 signer = AWSV4Signer(
     access_key=ACCESS_KEY,
     secret_key=SECRET_KEY,
@@ -119,7 +116,7 @@ signer = AWSV4Signer(
     host='webservices.amazon.fr',
     method='POST',
     uri='/paapi5/searchitems',
-    payload=''
+    payload=''  # Ce champ sera mis à jour avec le payload réel lors de la requête
 )
 
 @app.route('/search', methods=['POST'])
@@ -162,8 +159,9 @@ def amazon_search():
         )
 
         # Ajouter la signature aux en-têtes de la requête
+        signer.payload = search_request.to_str()  # Mettre à jour le payload avec le contenu de la requête
         headers = signer.get_authorization_header()
-        client.default_headers.update(headers)
+        client.default_headers.update(headers)  # Ajouter les en-têtes de signature au client
 
         # Rechercher des articles via l'API Amazon
         response = amazon.search_items(search_request)
