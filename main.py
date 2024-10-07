@@ -49,13 +49,24 @@ amazon = DefaultApi(client)
 
 @app.route('/search', methods=['POST'])
 def amazon_search():
-    # Récupérer les données envoyées dans la requête POST (ex: {"keywords": "laptop"})
-    data = request.get_json()
-    keywords = data.get('keywords', '')
+    # Vérifier si la requête contient des données JSON valides
+    if not request.is_json:
+        return jsonify({"error": "Invalid Content-Type. Must be application/json"}), 400
 
-    # Si aucun mot-clé n'est fourni, retourner une erreur
+    # Récupérer les données envoyées dans la requête POST
+    data = request.get_json()
+
+    # Vérifier si la récupération des données a réussi
+    if data is None:
+        return jsonify({"error": "Empty or invalid JSON provided"}), 400
+
+    # Vérifier si le champ 'keywords' est présent dans les données JSON
+    keywords = data.get('keywords', '')
     if not keywords:
         return jsonify({"error": "Keywords are required for searching"}), 400
+
+    # Log pour déboguer
+    print(f"[DEBUG] Received keywords: {keywords}")
 
     try:
         # Configurer la requête avec les ressources nécessaires
@@ -93,7 +104,12 @@ def amazon_search():
 
     except ApiException as e:
         # Gérer les erreurs de l'API Amazon
+        print(f"[ERROR] API Exception: {str(e)}")  # Ajout de log pour débogage
         return jsonify({"error": str(e)}), 500
+    except Exception as e:
+        # Gérer les autres exceptions générales
+        print(f"[ERROR] General Exception: {str(e)}")  # Ajout de log pour débogage
+        return jsonify({"error": "An unexpected error occurred. Please try again later."}), 500
 
 # Lancer l'application Flask sur le port 8080 (nécessaire pour Google Cloud Run)
 if __name__ == '__main__':
