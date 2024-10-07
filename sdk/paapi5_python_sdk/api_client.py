@@ -133,7 +133,7 @@ class ApiClient(object):
 
     print(f"[DEBUG] Calling API with access_key: {self.access_key}, secret_key: {self.secret_key}, host: {self.host}")
 
-        config = self.configuration
+    config = self.configuration
 
         # header parameters
         header_params = header_params or {}
