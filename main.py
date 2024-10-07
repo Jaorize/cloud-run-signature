@@ -30,7 +30,7 @@ ASSOCIATE_TAG = os.getenv("ASSOCIATE_TAG")
 if not ACCESS_KEY or not SECRET_KEY or not ASSOCIATE_TAG:
     raise ValueError("L'une des variables d'environnement nécessaires (ACCESS_KEY, SECRET_KEY, ASSOCIATE_TAG) n'est pas définie.")
 
-# Afficher les valeurs des variables d'environnement pour vérifier leur initialisation
+# Ajoutez ce print statement pour vérifier les valeurs des variables d'environnement
 print(f"ACCESS_KEY: {ACCESS_KEY}")
 print(f"SECRET_KEY: {SECRET_KEY}")
 print(f"ASSOCIATE_TAG: {ASSOCIATE_TAG}")
@@ -105,7 +105,10 @@ def initialize_client():
             host='webservices.amazon.fr',  # URL de l'API, ajustez selon la région
             region='eu-west-1'  # Remplacez par votre région AWS, comme 'us-west-2' ou 'eu-west-1'
         )
-        print(f"ApiClient initialized with access_key: {ACCESS_KEY}, secret_key: {SECRET_KEY}, host: 'webservices.amazon.fr', region: 'eu-west-1'")
+        print(f"ApiClient initialized with access_key: {client.access_key}, secret_key: {client.secret_key}, host: 'webservices.amazon.fr', region: 'eu-west-1'")
+    else:
+        # Vérifier si les valeurs sont toujours correctes
+        print(f"Reusing ApiClient instance with access_key: {client.access_key}, secret_key: {client.secret_key}")
 
 # Initialiser le client dès le lancement de l'application
 initialize_client()
@@ -147,6 +150,9 @@ def amazon_search():
     print(f"[DEBUG] Received keywords: {keywords}")
 
     try:
+        # Réinitialiser le client si nécessaire
+        initialize_client()
+
         # Configurer la requête avec les ressources nécessaires
         resources = [
             SearchItemsResource.ITEMINFO_TITLE,
@@ -164,16 +170,10 @@ def amazon_search():
             resources=resources
         )
 
-        # Mettre à jour le payload pour la signature
-        signer.payload = search_request.to_str()
-
-        # Générer les en-têtes de signature
+        # Ajouter la signature aux en-têtes de la requête
+        signer.payload = search_request.to_str()  # Mettre à jour le payload avec le contenu de la requête
         headers = signer.get_authorization_header()
-        # Ajouter les en-têtes de signature au client
-        client.default_headers.update(headers)
-
-        # Vérifier les clés d'API avant d'envoyer la requête
-        print(f"[DEBUG] Access Key: {client.access_key}, Secret Key: {client.secret_key}")
+        client.default_headers.update(headers)  # Ajouter les en-têtes de signature au client
 
         # Rechercher des articles via l'API Amazon
         response = amazon.search_items(search_request)
