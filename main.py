@@ -10,11 +10,11 @@ sdk_path = os.path.abspath(os.path.join(os.path.dirname(__file__), 'sdk'))
 if sdk_path not in sys.path:
     sys.path.append(sdk_path)
 
-# Debug : Vérifier le contenu du chemin et le répertoire SDK
+# Vérifier et afficher les chemins pour débogage
 print("[DEBUG] Chemins dans sys.path :", sys.path)
 print("[DEBUG] Contenu du répertoire SDK :", os.listdir(sdk_path) if os.path.isdir(sdk_path) else "Répertoire SDK non trouvé")
 
-# Importer les modules du SDK après avoir ajouté le chemin
+# Importer les modules du SDK
 try:
     from paapi5_python_sdk.api_client import ApiClient
     from paapi5_python_sdk.api.default_api import DefaultApi
@@ -38,7 +38,7 @@ ASSOCIATE_TAG = os.getenv("ASSOCIATE_TAG")
 if not ACCESS_KEY or not SECRET_KEY or not ASSOCIATE_TAG:
     raise ValueError("L'une des variables d'environnement nécessaires (ACCESS_KEY, SECRET_KEY, ASSOCIATE_TAG) n'est pas définie.")
 
-# Ajoutez ce print statement pour vérifier les valeurs des variables d'environnement
+# Afficher les valeurs récupérées
 print(f"ACCESS_KEY: {ACCESS_KEY}")
 print(f"SECRET_KEY: {SECRET_KEY}")
 print(f"ASSOCIATE_TAG: {ASSOCIATE_TAG}")
@@ -88,9 +88,9 @@ class AWSV4Signer:
         }
         return headers
 
-# Créer une instance de l'ApiClient avec la configuration initiale
+# Initialiser les variables globales
 client = None
-signer = None  # Déclarez `signer` globalement
+signer = None
 
 def initialize_client():
     global client, signer
@@ -112,7 +112,7 @@ def initialize_client():
             host='webservices.amazon.fr',
             method='POST',
             uri='/paapi5/searchitems',
-            payload=''  # Ce champ sera mis à jour avec le payload réel lors de la requête
+            payload=''
         )
 
 @app.route('/search', methods=['POST'])
