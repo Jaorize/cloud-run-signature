@@ -10,13 +10,21 @@ sdk_path = os.path.abspath(os.path.join(os.path.dirname(__file__), 'sdk'))
 if sdk_path not in sys.path:
     sys.path.append(sdk_path)
 
+# Debug : Vérifier le contenu du chemin et le répertoire SDK
+print("[DEBUG] Chemins dans sys.path :", sys.path)
+print("[DEBUG] Contenu du répertoire SDK :", os.listdir(sdk_path) if os.path.isdir(sdk_path) else "Répertoire SDK non trouvé")
+
 # Importer les modules du SDK après avoir ajouté le chemin
-from paapi5_python_sdk.api_client import ApiClient
-from paapi5_python_sdk.api.default_api import DefaultApi
-from paapi5_python_sdk.models.search_items_request import SearchItemsRequest
-from paapi5_python_sdk.models.partner_type import PartnerType
-from paapi5_python_sdk.models.search_items_resource import SearchItemsResource
-from paapi5_python_sdk.rest import ApiException
+try:
+    from paapi5_python_sdk.api_client import ApiClient
+    from paapi5_python_sdk.api.default_api import DefaultApi
+    from paapi5_python_sdk.models.search_items_request import SearchItemsRequest
+    from paapi5_python_sdk.models.partner_type import PartnerType
+    from paapi5_python_sdk.models.search_items_resource import SearchItemsResource
+    from paapi5_python_sdk.rest import ApiException
+except ModuleNotFoundError as e:
+    print(f"[ERROR] Module non trouvé : {e}")
+    raise e
 
 # Initialisation de l'application Flask
 app = Flask(__name__)
@@ -58,39 +66,26 @@ class AWSV4Signer:
         return k_signing
 
     def get_authorization_header(self):
-        # Create a date for headers and the credential string
         t = datetime.utcnow()
         amz_date = t.strftime('%Y%m%dT%H%M%SZ')
         date_stamp = t.strftime('%Y%m%d')
-
-        # Create canonical request
         canonical_uri = self.uri
         canonical_querystring = ''
         canonical_headers = f'host:{self.host}\nx-amz-date:{amz_date}\n'
         signed_headers = 'host;x-amz-date'
         payload_hash = hashlib.sha256(self.payload.encode('utf-8')).hexdigest()
         canonical_request = f'{self.method}\n{canonical_uri}\n{canonical_querystring}\n{canonical_headers}\n{signed_headers}\n{payload_hash}'
-
-        # Create the string to sign
         algorithm = 'AWS4-HMAC-SHA256'
         credential_scope = f'{date_stamp}/{self.region}/{self.service}/aws4_request'
         string_to_sign = f'{algorithm}\n{amz_date}\n{credential_scope}\n{hashlib.sha256(canonical_request.encode("utf-8")).hexdigest()}'
-
-        # Create the signing key using the function defined above.
         signing_key = self.get_signature_key(date_stamp)
-
-        # Sign the string_to_sign using the signing_key
         signature = hmac.new(signing_key, string_to_sign.encode('utf-8'), hashlib.sha256).hexdigest()
-
-        # Add signing information to the request headers
         authorization_header = f'{algorithm} Credential={self.access_key}/{credential_scope}, SignedHeaders={signed_headers}, Signature={signature}'
-
         headers = {
             'Authorization': authorization_header,
             'x-amz-date': amz_date,
             'Content-Type': 'application/json'
         }
-
         return headers
 
 # Créer une instance de l'ApiClient avec la configuration initiale
@@ -98,7 +93,7 @@ client = None
 signer = None  # Déclarez `signer` globalement
 
 def initialize_client():
-    global client, signer  # Utilisez `global` pour accéder à la variable globale
+    global client, signer
     if client is None:
         client = ApiClient(
             access_key=ACCESS_KEY,
@@ -138,14 +133,12 @@ def amazon_search():
     print(f"[DEBUG] Received keywords: {keywords}")
 
     try:
-        # Définir les ressources nécessaires pour la recherche
         resources = [
             SearchItemsResource.ITEMINFO_TITLE,
             SearchItemsResource.ITEMINFO_BYLINEINFO,
             SearchItemsResource.OFFERS_LISTINGS_PRICE
         ]
 
-        # Créer la requête de recherche
         search_request = SearchItemsRequest(
             partner_tag=ASSOCIATE_TAG,
             partner_type=PartnerType.ASSOCIATES,
@@ -155,15 +148,11 @@ def amazon_search():
             resources=resources
         )
 
-        # Ajouter la signature aux en-têtes de la requête
         signer.payload = search_request.to_str()
         headers = signer.get_authorization_header()
         client.default_headers.update(headers)
 
-        # Créer une instance de DefaultApi
         amazon_api = DefaultApi(client)
-
-        # Effectuer la requête
         response = amazon_api.search_items(search_request)
 
         if response and response.search_result and response.search_result.items:
