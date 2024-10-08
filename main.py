@@ -94,26 +94,32 @@ signer = None
 
 def initialize_client():
     global client, signer
-    if client is None:
-        client = ApiClient(
-            access_key=ACCESS_KEY,
-            secret_key=SECRET_KEY,
-            host='webservices.amazon.fr',
-            region='eu-west-1'
-        )
-        print(f"[DEBUG] ApiClient initialized with access_key: {client.access_key}, secret_key: {client.secret_key}, host: 'webservices.amazon.fr', region: 'eu-west-1'")
 
-    if signer is None:
-        signer = AWSV4Signer(
-            access_key=ACCESS_KEY,
-            secret_key=SECRET_KEY,
-            region='eu-west-1',
-            service='ProductAdvertisingAPI',
-            host='webservices.amazon.fr',
-            method='POST',
-            uri='/paapi5/searchitems',
-            payload=''
-        )
+    # Vérifier que le client n'est pas réinitialisé
+    if client is not None:
+        print("[DEBUG] ApiClient already initialized, skipping reinitialization.")
+        return
+
+    # Initialisation du client
+    client = ApiClient(
+        access_key=ACCESS_KEY,
+        secret_key=SECRET_KEY,
+        host='webservices.amazon.fr',
+        region='eu-west-1'
+    )
+    print(f"[DEBUG] ApiClient initialized with access_key: {client.access_key}, secret_key: {client.secret_key}, host: 'webservices.amazon.fr', region: 'eu-west-1'")
+
+    # Initialisation de signer avec les identifiants
+    signer = AWSV4Signer(
+        access_key=ACCESS_KEY,
+        secret_key=SECRET_KEY,
+        region='eu-west-1',
+        service='ProductAdvertisingAPI',
+        host='webservices.amazon.fr',
+        method='POST',
+        uri='/paapi5/searchitems',
+        payload=''
+    )
 
 @app.route('/search', methods=['POST'])
 def amazon_search():
