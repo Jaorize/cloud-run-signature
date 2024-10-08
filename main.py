@@ -4,13 +4,6 @@ import hashlib
 import hmac
 from datetime import datetime
 from flask import Flask, request, jsonify
-
-# Ajouter le répertoire SDK au PYTHONPATH si nécessaire
-sdk_path = os.path.abspath(os.path.join(os.path.dirname(__file__), 'sdk'))
-if sdk_path not in sys.path:
-    sys.path.append(sdk_path)
-
-# Importer les modules du SDK après avoir ajouté le chemin
 from paapi5_python_sdk.api_client import ApiClient
 from paapi5_python_sdk.api.default_api import DefaultApi
 from paapi5_python_sdk.models.search_items_request import SearchItemsRequest
@@ -61,7 +54,7 @@ class AWSV4Signer:
         # Create a date for headers and the credential string
         t = datetime.utcnow()
         amz_date = t.strftime('%Y%m%dT%H%M%SZ')
-        date_stamp = t.strftime('%Y%m%d')  # Date sans l'heure, utilisé dans la portée des informations d'identification
+        date_stamp = t.strftime('%Y%m%d')
 
         # Create canonical request
         canonical_uri = self.uri
@@ -95,13 +88,11 @@ class AWSV4Signer:
 
 # Créer une instance de l'ApiClient avec la configuration initiale
 client = None
+signer = None  # Déclarez `signer` globalement
 
 def initialize_client():
-    global client
+    global client, signer  # Utilisez `global` pour accéder à la variable globale
     if client is None:
-        if not ACCESS_KEY or not SECRET_KEY:
-            raise ValueError("ACCESS_KEY ou SECRET_KEY sont manquants")
-
         client = ApiClient(
             access_key=ACCESS_KEY,
             secret_key=SECRET_KEY,
@@ -109,23 +100,27 @@ def initialize_client():
             region='eu-west-1'
         )
         print(f"[DEBUG] ApiClient initialized with access_key: {client.access_key}, secret_key: {client.secret_key}, host: 'webservices.amazon.fr', region: 'eu-west-1'")
-    else:
-        # Vérifiez que les clés n'ont pas été réinitialisées à None
-        if not client.access_key or not client.secret_key:
-            print(f"[ERROR] Client keys are missing! Reinitializing ApiClient.")
-            client.access_key = ACCESS_KEY
-            client.secret_key = SECRET_KEY
-            print(f"[DEBUG] Reinitialized ApiClient with access_key: {client.access_key}, secret_key: {client.secret_key}")
+
+    if signer is None:
+        signer = AWSV4Signer(
+            access_key=ACCESS_KEY,
+            secret_key=SECRET_KEY,
+            region='eu-west-1',
+            service='ProductAdvertisingAPI',
+            host='webservices.amazon.fr',
+            method='POST',
+            uri='/paapi5/searchitems',
+            payload=''  # Ce champ sera mis à jour avec le payload réel lors de la requête
+        )
 
 @app.route('/search', methods=['POST'])
 def amazon_search():
-    initialize_client()  # S'assurer que le client est initialisé correctement avant chaque requête
+    initialize_client()
 
     if not request.is_json:
         return jsonify({"error": "Invalid Content-Type. Must be application/json"}), 400
 
     data = request.get_json()
-
     if data is None:
         return jsonify({"error": "Empty or invalid JSON provided"}), 400
 
@@ -136,12 +131,14 @@ def amazon_search():
     print(f"[DEBUG] Received keywords: {keywords}")
 
     try:
+        # Définir les ressources nécessaires pour la recherche
         resources = [
             SearchItemsResource.ITEMINFO_TITLE,
             SearchItemsResource.ITEMINFO_BYLINEINFO,
             SearchItemsResource.OFFERS_LISTINGS_PRICE
         ]
 
+        # Créer la requête de recherche
         search_request = SearchItemsRequest(
             partner_tag=ASSOCIATE_TAG,
             partner_type=PartnerType.ASSOCIATES,
@@ -151,35 +148,36 @@ def amazon_search():
             resources=resources
         )
 
-        signer.payload = search_request.to_str()  # Mettre à jour le payload avec le contenu de la requête
+        # Ajouter la signature aux en-têtes de la requête
+        signer.payload = search_request.to_str()
         headers = signer.get_authorization_header()
         client.default_headers.update(headers)
 
-        # Créer une instance de DefaultApi pour l'appel API
+        # Créer une instance de DefaultApi
         amazon_api = DefaultApi(client)
 
         # Effectuer la requête
         response = amazon_api.search_items(search_request)
 
-        if response is not None and response.search_result is not None:
-            results = []
-            for item in response.search_result.items:
-                results.append({
+        if response and response.search_result and response.search_result.items:
+            results = [
+                {
                     "title": item.item_info.title.display_value,
                     "url": item.detail_page_url,
                     "price": item.offers.listings[0].price.display_amount if item.offers and item.offers.listings else 'N/A'
-                })
+                }
+                for item in response.search_result.items
+            ]
             return jsonify(results), 200
         else:
             return jsonify({"message": "No results found"}), 404
 
     except ApiException as e:
-        print(f"[ERROR] API Exception: {str(e)}")  # Ajout de log pour débogage
+        print(f"[ERROR] API Exception: {str(e)}")
         return jsonify({"error": str(e)}), 500
     except Exception as e:
-        print(f"[ERROR] General Exception: {str(e)}")  # Ajout de log pour débogage
+        print(f"[ERROR] General Exception: {str(e)}")
         return jsonify({"error": f"An unexpected error occurred. {str(e)}"}), 500
 
-# Lancer l'application Flask sur le port 8080 (nécessaire pour Google Cloud Run)
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=8080)
