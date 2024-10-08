@@ -32,7 +32,6 @@ ASSOCIATE_TAG = os.getenv("ASSOCIATE_TAG")
 if not ACCESS_KEY or not SECRET_KEY or not ASSOCIATE_TAG:
     raise ValueError("L'une des variables d'environnement nécessaires (ACCESS_KEY, SECRET_KEY, ASSOCIATE_TAG) n'est pas définie.")
 
-# Ajoutez ce print statement pour vérifier les valeurs des variables d'environnement
 print(f"ACCESS_KEY: {ACCESS_KEY}")
 print(f"SECRET_KEY: {SECRET_KEY}")
 print(f"ASSOCIATE_TAG: {ASSOCIATE_TAG}")
@@ -151,6 +150,9 @@ def amazon_search():
         signer.payload = search_request.to_str()
         headers = signer.get_authorization_header()
         client.default_headers.update(headers)
+
+        # Log des en-têtes ajoutés pour vérifier la signature et l'horodatage
+        print(f"[DEBUG] Headers used in request: {client.default_headers}")
 
         amazon_api = DefaultApi(client)
         response = amazon_api.search_items(search_request)
