@@ -1,3 +1,5 @@
+# Fichier : main.py
+
 import os
 import sys
 import hashlib
@@ -10,21 +12,13 @@ sdk_path = os.path.abspath(os.path.join(os.path.dirname(__file__), 'sdk'))
 if sdk_path not in sys.path:
     sys.path.append(sdk_path)
 
-# Vérifier et afficher les chemins pour débogage
-print("[DEBUG] Chemins dans sys.path :", sys.path)
-print("[DEBUG] Contenu du répertoire SDK :", os.listdir(sdk_path) if os.path.isdir(sdk_path) else "Répertoire SDK non trouvé")
-
-# Importer les modules du SDK
-try:
-    from paapi5_python_sdk.api_client import ApiClient
-    from paapi5_python_sdk.api.default_api import DefaultApi
-    from paapi5_python_sdk.models.search_items_request import SearchItemsRequest
-    from paapi5_python_sdk.models.partner_type import PartnerType
-    from paapi5_python_sdk.models.search_items_resource import SearchItemsResource
-    from paapi5_python_sdk.rest import ApiException
-except ModuleNotFoundError as e:
-    print(f"[ERROR] Module non trouvé : {e}")
-    raise e
+# Importer les modules du SDK après avoir ajouté le chemin
+from paapi5_python_sdk.api_client import ApiClient
+from paapi5_python_sdk.api.default_api import DefaultApi
+from paapi5_python_sdk.models.search_items_request import SearchItemsRequest
+from paapi5_python_sdk.models.partner_type import PartnerType
+from paapi5_python_sdk.models.search_items_resource import SearchItemsResource
+from paapi5_python_sdk.rest import ApiException
 
 # Initialisation de l'application Flask
 app = Flask(__name__)
@@ -38,7 +32,7 @@ ASSOCIATE_TAG = os.getenv("ASSOCIATE_TAG")
 if not ACCESS_KEY or not SECRET_KEY or not ASSOCIATE_TAG:
     raise ValueError("L'une des variables d'environnement nécessaires (ACCESS_KEY, SECRET_KEY, ASSOCIATE_TAG) n'est pas définie.")
 
-# Afficher les valeurs récupérées
+# Ajoutez ce print statement pour vérifier les valeurs des variables d'environnement
 print(f"ACCESS_KEY: {ACCESS_KEY}")
 print(f"SECRET_KEY: {SECRET_KEY}")
 print(f"ASSOCIATE_TAG: {ASSOCIATE_TAG}")
@@ -69,57 +63,57 @@ class AWSV4Signer:
         t = datetime.utcnow()
         amz_date = t.strftime('%Y%m%dT%H%M%SZ')
         date_stamp = t.strftime('%Y%m%d')
+
         canonical_uri = self.uri
         canonical_querystring = ''
         canonical_headers = f'host:{self.host}\nx-amz-date:{amz_date}\n'
         signed_headers = 'host;x-amz-date'
         payload_hash = hashlib.sha256(self.payload.encode('utf-8')).hexdigest()
         canonical_request = f'{self.method}\n{canonical_uri}\n{canonical_querystring}\n{canonical_headers}\n{signed_headers}\n{payload_hash}'
+
         algorithm = 'AWS4-HMAC-SHA256'
         credential_scope = f'{date_stamp}/{self.region}/{self.service}/aws4_request'
         string_to_sign = f'{algorithm}\n{amz_date}\n{credential_scope}\n{hashlib.sha256(canonical_request.encode("utf-8")).hexdigest()}'
+
         signing_key = self.get_signature_key(date_stamp)
         signature = hmac.new(signing_key, string_to_sign.encode('utf-8'), hashlib.sha256).hexdigest()
+
         authorization_header = f'{algorithm} Credential={self.access_key}/{credential_scope}, SignedHeaders={signed_headers}, Signature={signature}'
+
         headers = {
             'Authorization': authorization_header,
             'x-amz-date': amz_date,
             'Content-Type': 'application/json'
         }
+
         return headers
 
-# Initialiser les variables globales
+# Créer une instance de l'ApiClient avec la configuration initiale
 client = None
 signer = None
 
 def initialize_client():
     global client, signer
+    if client is None:
+        client = ApiClient(
+            access_key=ACCESS_KEY,
+            secret_key=SECRET_KEY,
+            host='webservices.amazon.fr',
+            region='eu-west-1'
+        )
+        print(f"[DEBUG] ApiClient initialized with access_key: {client.access_key}, secret_key: {client.secret_key}")
 
-    # Vérifier que le client n'est pas réinitialisé
-    if client is not None:
-        print("[DEBUG] ApiClient already initialized, skipping reinitialization.")
-        return
-
-    # Initialisation du client
-    client = ApiClient(
-        access_key=ACCESS_KEY,
-        secret_key=SECRET_KEY,
-        host='webservices.amazon.fr',
-        region='eu-west-1'
-    )
-    print(f"[DEBUG] ApiClient initialized with access_key: {client.access_key}, secret_key: {client.secret_key}, host: 'webservices.amazon.fr', region: 'eu-west-1'")
-
-    # Initialisation de signer avec les identifiants
-    signer = AWSV4Signer(
-        access_key=ACCESS_KEY,
-        secret_key=SECRET_KEY,
-        region='eu-west-1',
-        service='ProductAdvertisingAPI',
-        host='webservices.amazon.fr',
-        method='POST',
-        uri='/paapi5/searchitems',
-        payload=''
-    )
+    if signer is None:
+        signer = AWSV4Signer(
+            access_key=ACCESS_KEY,
+            secret_key=SECRET_KEY,
+            region='eu-west-1',
+            service='ProductAdvertisingAPI',
+            host='webservices.amazon.fr',
+            method='POST',
+            uri='/paapi5/searchitems',
+            payload=''  # Ce champ sera mis à jour avec le payload réel lors de la requête
+        )
 
 @app.route('/search', methods=['POST'])
 def amazon_search():
