@@ -155,5 +155,31 @@ def amazon_search():
         headers = signer.get_authorization_header()
         client.default_headers.update(headers)
 
-        response = amazon.search_items(search_request)
+        # Créer une instance de DefaultApi pour l'appel API
+        amazon_api = DefaultApi(client)
 
+        # Effectuer la requête
+        response = amazon_api.search_items(search_request)
+
+        if response is not None and response.search_result is not None:
+            results = []
+            for item in response.search_result.items:
+                results.append({
+                    "title": item.item_info.title.display_value,
+                    "url": item.detail_page_url,
+                    "price": item.offers.listings[0].price.display_amount if item.offers and item.offers.listings else 'N/A'
+                })
+            return jsonify(results), 200
+        else:
+            return jsonify({"message": "No results found"}), 404
+
+    except ApiException as e:
+        print(f"[ERROR] API Exception: {str(e)}")  # Ajout de log pour débogage
+        return jsonify({"error": str(e)}), 500
+    except Exception as e:
+        print(f"[ERROR] General Exception: {str(e)}")  # Ajout de log pour débogage
+        return jsonify({"error": f"An unexpected error occurred. {str(e)}"}), 500
+
+# Lancer l'application Flask sur le port 8080 (nécessaire pour Google Cloud Run)
+if __name__ == '__main__':
+    app.run(host="0.0.0.0", port=8080)
