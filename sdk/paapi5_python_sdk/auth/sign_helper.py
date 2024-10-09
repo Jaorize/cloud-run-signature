@@ -35,8 +35,9 @@ class AWSV4Auth:
         self.xAmzDateTime = self.timestamp.strftime("%Y%m%dT%H%M%SZ")
         self.xAmzDate = self.timestamp.strftime("%Y%m%d")
 
-        # Ajout de l'en-tête 'host'
+        # Ajout de l'en-tête 'host' et 'x-amz-date'
         self.headers['host'] = self.host
+        self.headers['x-amz-date'] = self.xAmzDateTime
 
     def get_headers(self):
         """Return the signed headers including the Authorization header."""
@@ -127,19 +128,4 @@ class AWSV4Auth:
         )
         return string_to_sign
 
-    def sign(self, key, msg):
-        """Sign a message using HMAC-SHA256 with the provided key."""
-        return hmac.new(key, msg.encode("utf-8"), hashlib.sha256).digest()
-
-    def get_signature_key(self, key, date_stamp, region_name, service_name):
-        """Create the signing key using a series of HMAC operations."""
-        k_date = self.sign(("AWS4" + key).encode("utf-8"), date_stamp)
-        k_region = self.sign(k_date, region_name)
-        k_service = self.sign(k_region, service_name)
-        k_signing = self.sign(k_service, "aws4_request")
-        return k_signing
-
-    def get_signature(self, signing_key, string_to_sign):
-        """Generate the signature using the signing key and string to sign."""
-        signature = hmac.new(signing_key, string_to_sign.encode("utf-8"), hashlib.sha256).hexdigest()
-        return signature
+    def sign(self, key
