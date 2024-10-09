@@ -85,33 +85,48 @@ class AWSV4Auth:
         self.headers["Authorization"] = authorization_header
         return self.headers
 
-    def prepare_canonical_url(self):
-        canonical_uri = self.method_name + "\n" + self.path
-        canonical_querystring = ""
-        canonical_header = ""
-        self.signed_header = ""
-        sorted_keys = sorted(self.headers, key=str.lower)
-        for key in sorted_keys:
-            self.signed_header = self.signed_header + key.lower() + ";"
-            canonical_header = (
-                canonical_header + key.lower() + ":" + self.headers[key] + "\n"
-            )
-        self.signed_header = self.signed_header[:-1]
-        payload_hash = hashlib.sha256(
-            json.dumps(self.payload).encode("utf-8")
-        ).hexdigest()
-        canonical_request = (
-            canonical_uri
-            + "\n"
-            + canonical_querystring
-            + "\n"
-            + canonical_header
-            + "\n"
-            + self.signed_header
-            + "\n"
-            + payload_hash
-        )
-        return canonical_request
+ def prepare_canonical_url(self):
+    canonical_uri = self.method_name + "\n" + self.path
+    canonical_querystring = ""
+    canonical_header = ""
+    self.signed_header = ""
+
+    # Vérification si les en-têtes requis sont présents
+    required_headers = ["host", "x-amz-date"]
+    for header in required_headers:
+        if header not in self.headers:
+            raise ValueError(f"Missing required header: {header}")
+
+    # Construction de la liste des en-têtes signés
+    sorted_keys = sorted(self.headers, key=str.lower)
+    for key in sorted_keys:
+        if key and self.headers[key]:  # Vérifier que chaque clé a une valeur définie
+            self.signed_header += key.lower() + ";"
+            canonical_header += key.lower() + ":" + self.headers[key] + "\n"
+
+    # Suppression du dernier point-virgule superflu
+    self.signed_header = self.signed_header[:-1]
+
+    # Vérification et log des en-têtes signés
+    if not self.signed_header:
+        raise ValueError("Signed headers are empty. Ensure that headers are properly defined.")
+    print(f"[DEBUG] Signed headers: {self.signed_header}")
+
+    payload_hash = hashlib.sha256(
+        json.dumps(self.payload).encode("utf-8")
+    ).hexdigest()
+    canonical_request = (
+        canonical_uri
+        + "\n"
+        + canonical_querystring
+        + "\n"
+        + canonical_header
+        + "\n"
+        + self.signed_header
+        + "\n"
+        + payload_hash
+    )
+    return canonical_request
 
     def prepare_string_to_sign(self, canonical_request):
         self.algorithm = "AWS4-HMAC-SHA256"
