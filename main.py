@@ -1,3 +1,4 @@
+# main.py
 import os
 import sys
 from datetime import datetime
@@ -15,8 +16,6 @@ from paapi5_python_sdk.models.search_items_request import SearchItemsRequest
 from paapi5_python_sdk.models.partner_type import PartnerType
 from paapi5_python_sdk.models.search_items_resource import SearchItemsResource
 from paapi5_python_sdk.rest import ApiException
-
-# Importer le module de génération de signature AWS
 from paapi5_python_sdk.auth.sign_helper import AWSV4Auth
 
 # Initialisation de l'application Flask
@@ -86,15 +85,15 @@ def amazon_search():
         )
 
         # Utiliser AWSV4Auth pour générer la signature et les en-têtes d'authentification
-        timestamp = datetime.utcnow().strftime('%Y%m%dT%H%M%SZ')  # Correction : timestamp généré avec datetime
+        timestamp = datetime.utcnow()  # Correction : utiliser un objet datetime
         auth = AWSV4Auth(
             access_key=ACCESS_KEY,
             secret_key=SECRET_KEY,
             region='eu-west-1',
             service='ProductAdvertisingAPI',
             host='webservices.amazon.fr',
-            method_name='POST',  # Ajout de la méthode HTTP
-            timestamp=timestamp  # Correction : passer un timestamp valide
+            method_name='POST',
+            timestamp=timestamp  # Correction : passer un objet datetime
         )
 
         # Générer les en-têtes de la requête signée
