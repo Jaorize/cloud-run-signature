@@ -35,6 +35,9 @@ class AWSV4Auth:
         self.xAmzDateTime = self.timestamp.strftime("%Y%m%dT%H%M%SZ")
         self.xAmzDate = self.timestamp.strftime("%Y%m%d")
 
+        # Ajout de l'en-tête 'host'
+        self.headers['host'] = self.host
+
     def get_headers(self):
         """Return the signed headers including the Authorization header."""
         canonical_request = self.prepare_canonical_url()
