@@ -91,7 +91,9 @@ def amazon_search():
             secret_key=SECRET_KEY,
             region='eu-west-1',
             service='ProductAdvertisingAPI',
-            host='webservices.amazon.fr'
+            host='webservices.amazon.fr',
+            method_name='POST',  # Ajout de la méthode HTTP
+            timestamp=datetime.utcnow().strftime('%Y%m%dT%H%M%SZ')  # Timestamp dynamique
         )
 
         # Générer les en-têtes de la requête signée
