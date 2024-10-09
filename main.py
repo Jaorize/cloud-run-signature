@@ -31,7 +31,7 @@ ASSOCIATE_TAG = os.getenv("ASSOCIATE_TAG")
 if not ACCESS_KEY or not SECRET_KEY or not ASSOCIATE_TAG:
     raise ValueError("L'une des variables d'environnement nécessaires (ACCESS_KEY, SECRET_KEY, ASSOCIATE_TAG) n'est pas définie.")
 
-# Ajoutez ce print statement pour vérifier les valeurs des variables d'environnement
+# Afficher les valeurs des variables d'environnement pour le débogage
 print(f"ACCESS_KEY: {ACCESS_KEY}")
 print(f"SECRET_KEY: {SECRET_KEY}")
 print(f"ASSOCIATE_TAG: {ASSOCIATE_TAG}")
@@ -86,6 +86,7 @@ def amazon_search():
         )
 
         # Utiliser AWSV4Auth pour générer la signature et les en-têtes d'authentification
+        timestamp = datetime.utcnow().strftime('%Y%m%dT%H%M%SZ')  # Correction : timestamp généré avec datetime
         auth = AWSV4Auth(
             access_key=ACCESS_KEY,
             secret_key=SECRET_KEY,
@@ -93,7 +94,7 @@ def amazon_search():
             service='ProductAdvertisingAPI',
             host='webservices.amazon.fr',
             method_name='POST',  # Ajout de la méthode HTTP
-            timestamp=datetime.utcnow().strftime('%Y%m%dT%H%M%SZ')  # Timestamp dynamique
+            timestamp=timestamp  # Correction : passer un timestamp valide
         )
 
         # Générer les en-têtes de la requête signée
