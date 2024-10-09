@@ -97,7 +97,8 @@ def amazon_search():
         )
 
         # Générer les en-têtes de la requête signée
-        headers = auth.get_auth_headers(method='POST', uri='/paapi5/searchitems', payload=search_request.to_str())
+        headers = auth.get_headers()
+
 
         # Mettre à jour les en-têtes du client API avec ceux générés
         client.default_headers.update(headers)
