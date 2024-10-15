@@ -89,6 +89,7 @@ def amazon_search():
         auth = AWSV4Auth(
             access_key=ACCESS_KEY,
             secret_key=SECRET_KEY,
+            partner_tag=ASSOCIATE_TAG
             region='eu-west-1',
             service='ProductAdvertisingAPI',
             host='webservices.amazon.fr',
