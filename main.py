@@ -18,27 +18,21 @@ from paapi5_python_sdk.models.search_items_resource import SearchItemsResource
 from paapi5_python_sdk.rest import ApiException
 from paapi5_python_sdk.auth.sign_helper import AWSV4Auth
 
-# Initialisation de l'application Flask
+
 app = Flask(__name__)
 
-# Récupérer les variables d'environnement définies dans Google Cloud Run
-ACCESS_KEY = os.getenv("ACCESS_KEY")
-SECRET_KEY = os.getenv("SECRET_KEY")
-ASSOCIATE_TAG = os.getenv("ASSOCIATE_TAG")
+# Fetch access key, secret key, and associate tag from environment variables
+ACCESS_KEY = os.getenv('ACCESS_KEY')
+SECRET_KEY = os.getenv('SECRET_KEY')
+ASSOCIATE_TAG = os.getenv('ASSOCIATE_TAG')
 
-# Vérification que les variables d'environnement ont été récupérées correctement
-if not ACCESS_KEY or not SECRET_KEY or not ASSOCIATE_TAG:
-    raise ValueError("L'une des variables d'environnement nécessaires (ACCESS_KEY, SECRET_KEY, ASSOCIATE_TAG) n'est pas définie.")
-
-# Afficher les valeurs des variables d'environnement pour le débogage
-print(f"ACCESS_KEY: {ACCESS_KEY}")
-print(f"SECRET_KEY: {SECRET_KEY}")
-print(f"ASSOCIATE_TAG: {ASSOCIATE_TAG}")
-
-# Créer une instance de l'ApiClient avec la configuration initiale
+# Client to be initialized once globally
 client = None
 
 def initialize_client():
+    """
+    Initialize the ApiClient only once globally.
+    """
     global client
     if client is None:
         client = ApiClient(
@@ -47,34 +41,33 @@ def initialize_client():
             host='webservices.amazon.fr',
             region='eu-west-1'
         )
-        print(f"[DEBUG] ApiClient initialized with access_key: {client.access_key}, secret_key: {client.secret_key}")
 
 @app.route('/search', methods=['POST'])
-def amazon_search():
-    initialize_client()
-
-    if not request.is_json:
-        return jsonify({"error": "Invalid Content-Type. Must be application/json"}), 400
-
-    data = request.get_json()
-    if data is None:
-        return jsonify({"error": "Empty or invalid JSON provided"}), 400
-
-    keywords = data.get('keywords', '')
-    if not keywords:
-        return jsonify({"error": "Keywords are required for searching"}), 400
-
-    print(f"[DEBUG] Received keywords: {keywords}")
-
+def search_amazon_items():
+    """
+    Endpoint for searching Amazon items.
+    Request Body: JSON object containing 'keywords'
+    """
     try:
-        # Définir les ressources nécessaires pour la recherche
+        # Extract keywords from POST request body
+        data = request.get_json()
+        keywords = data.get('keywords', '')
+
+        if not keywords:
+            return jsonify({"error": "Missing 'keywords' in request"}), 400
+
+        # Initialize the Amazon API client
+        initialize_client()
+
+        # Define the resources we want to retrieve for each item
         resources = [
             SearchItemsResource.ITEMINFO_TITLE,
-            SearchItemsResource.ITEMINFO_BYLINEINFO,
+            SearchItemsResource.ITEMINFO_FEATURES,
+            SearchItemsResource.IMAGES_PRIMARY_MEDIUM,
             SearchItemsResource.OFFERS_LISTINGS_PRICE
         ]
 
-        # Créer la requête de recherche
+        # Build the search request
         search_request = SearchItemsRequest(
             partner_tag=ASSOCIATE_TAG,
             partner_type=PartnerType.ASSOCIATES,
@@ -84,52 +77,30 @@ def amazon_search():
             resources=resources
         )
 
-        # Utiliser AWSV4Auth pour générer la signature et les en-têtes d'authentification
-        timestamp = datetime.utcnow()  # Correction : utiliser un objet datetime
-        auth = AWSV4Auth(
-            access_key=ACCESS_KEY,
-            secret_key=SECRET_KEY,
-            partner_tag=ASSOCIATE_TAG
-            region='eu-west-1',
-            service='ProductAdvertisingAPI',
-            host='webservices.amazon.fr',
-            method_name='POST',
-            timestamp=timestamp  # Correction : passer un objet datetime
-        )
+        # Perform the API call
+        response = client.search_items(search_request)
 
-        # Générer les en-têtes de la requête signée
-        headers = auth.get_headers()
-
-
-        # Mettre à jour les en-têtes du client API avec ceux générés
-        client.default_headers.update(headers)
-        print(f"[DEBUG] Headers used in request: {headers}")
-
-        # Créer une instance de DefaultApi
-        amazon_api = DefaultApi(client)
-
-        # Effectuer la requête
-        response = amazon_api.search_items(search_request)
-
-        if response and response.search_result and response.search_result.items:
-            results = [
-                {
-                    "title": item.item_info.title.display_value,
-                    "url": item.detail_page_url,
-                    "price": item.offers.listings[0].price.display_amount if item.offers and item.offers.listings else 'N/A'
+        # Handle response success
+        if response.items_result and response.items_result.items:
+            items = []
+            for item in response.items_result.items:
+                item_data = {
+                    "title": item.item_info.title.display_value if item.item_info.title else "N/A",
+                    "features": item.item_info.features.display_values if item.item_info.features else "N/A",
+                    "price": item.offers.listings[0].price.display_amount if item.offers and item.offers.listings else "N/A",
+                    "image_url": item.images.primary.medium.url if item.images and item.images.primary.medium else "N/A"
                 }
-                for item in response.search_result.items
-            ]
-            return jsonify(results), 200
+                items.append(item_data)
+
+            return jsonify(items), 200
         else:
-            return jsonify({"message": "No results found"}), 404
+            return jsonify({"error": "No items found or API returned an error"}), 404
 
     except ApiException as e:
-        print(f"[ERROR] API Exception: {str(e)}")
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": f"Amazon API Exception: {str(e)}"}), 500
     except Exception as e:
-        print(f"[ERROR] General Exception: {str(e)}")
-        return jsonify({"error": f"An unexpected error occurred. {str(e)}"}), 500
+        return jsonify({"error": f"An unexpected error occurred: {str(e)}"}), 500
 
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=8080)
+    # Run the Flask app, ensuring the environment variables are set
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 8080)))
