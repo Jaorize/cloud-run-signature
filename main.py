@@ -2,7 +2,9 @@ import os
 import sys
 from datetime import datetime
 from flask import Flask, request, jsonify
+from dotenv import load_dotenv
 
+load_dotenv()  # take environment variables from .env.
 # Add SDK path to PYTHONPATH
 sdk_path = os.path.abspath(os.path.join(os.path.dirname(__file__), 'sdk'))
 if sdk_path not in sys.path:
@@ -47,20 +49,20 @@ def initialize_client():
         )
         print(f"[DEBUG] ApiClient initialized with access_key: {ACCESS_KEY}")
 
-@app.route('/search', methods=['POST'])
+@app.route('/search', methods=['GET'])
 def amazon_search():
     initialize_client()
 
-    if not request.is_json:
-        return jsonify({"error": "Invalid Content-Type. Must be application/json"}), 400
+    # if not request.is_json:
+    #     return jsonify({"error": "Invalid Content-Type. Must be application/json"}), 400
 
-    data = request.get_json()
-    if data is None:
-        return jsonify({"error": "Empty or invalid JSON provided"}), 400
-
-    keywords = data.get('keywords', '')
-    if not keywords:
-        return jsonify({"error": "Keywords are required for searching"}), 400
+    # data = request.get_json()
+    # if data is None:
+    #     return jsonify({"error": "Empty or invalid JSON provided"}), 400
+    keywords = "laptop"
+    # keywords = data.get('keywords', '')
+    # if not keywords:
+    #     return jsonify({"error": "Keywords are required for searching"}), 400
 
     print(f"[DEBUG] Received keywords: {keywords}")
 
