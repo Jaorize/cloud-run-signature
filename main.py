@@ -1,41 +1,39 @@
-# main.py
 import os
 import sys
 from datetime import datetime
 from flask import Flask, request, jsonify
 
-# Ajouter le répertoire SDK au PYTHONPATH si nécessaire
+# Add SDK path to PYTHONPATH
 sdk_path = os.path.abspath(os.path.join(os.path.dirname(__file__), 'sdk'))
 if sdk_path not in sys.path:
     sys.path.append(sdk_path)
 
-# Importer les modules du SDK après avoir ajouté le chemin
+# Import necessary modules from SDK
 from paapi5_python_sdk.api_client import ApiClient
 from paapi5_python_sdk.api.default_api import DefaultApi
 from paapi5_python_sdk.models.search_items_request import SearchItemsRequest
 from paapi5_python_sdk.models.partner_type import PartnerType
 from paapi5_python_sdk.models.search_items_resource import SearchItemsResource
 from paapi5_python_sdk.rest import ApiException
-from paapi5_python_sdk.auth.sign_helper import AWSV4Auth
 
-# Initialisation de l'application Flask
+# Initialize Flask app
 app = Flask(__name__)
 
-# Récupérer les variables d'environnement définies dans Google Cloud Run
+# Retrieve environment variables
 ACCESS_KEY = os.getenv("ACCESS_KEY")
 SECRET_KEY = os.getenv("SECRET_KEY")
 ASSOCIATE_TAG = os.getenv("ASSOCIATE_TAG")
 
-# Vérification que les variables d'environnement ont été récupérées correctement
+# Check environment variables
 if not ACCESS_KEY or not SECRET_KEY or not ASSOCIATE_TAG:
-    raise ValueError("L'une des variables d'environnement nécessaires (ACCESS_KEY, SECRET_KEY, ASSOCIATE_TAG) n'est pas définie.")
+    raise ValueError("Missing ACCESS_KEY, SECRET_KEY, or ASSOCIATE_TAG.")
 
-# Afficher les valeurs des variables d'environnement pour le débogage
+# Log retrieved environment variables for debugging
 print(f"ACCESS_KEY: {ACCESS_KEY}")
 print(f"SECRET_KEY: {SECRET_KEY}")
 print(f"ASSOCIATE_TAG: {ASSOCIATE_TAG}")
 
-# Créer une instance de l'ApiClient avec la configuration initiale
+# Initialize API client
 client = None
 
 def initialize_client():
@@ -47,7 +45,7 @@ def initialize_client():
             host='webservices.amazon.fr',
             region='eu-west-1'
         )
-        print(f"[DEBUG] ApiClient initialized with access_key: {client.access_key}, secret_key: {client.secret_key}")
+        print(f"[DEBUG] ApiClient initialized with access_key: {ACCESS_KEY}")
 
 @app.route('/search', methods=['POST'])
 def amazon_search():
@@ -67,14 +65,14 @@ def amazon_search():
     print(f"[DEBUG] Received keywords: {keywords}")
 
     try:
-        # Définir les ressources nécessaires pour la recherche
+        # Define the resources needed for search
         resources = [
             SearchItemsResource.ITEMINFO_TITLE,
             SearchItemsResource.ITEMINFO_BYLINEINFO,
             SearchItemsResource.OFFERS_LISTINGS_PRICE
         ]
 
-        # Créer la requête de recherche
+        # Create the search request
         search_request = SearchItemsRequest(
             partner_tag=ASSOCIATE_TAG,
             partner_type=PartnerType.ASSOCIATES,
@@ -84,32 +82,13 @@ def amazon_search():
             resources=resources
         )
 
-        # Utiliser AWSV4Auth pour générer la signature et les en-têtes d'authentification
-        timestamp = datetime.utcnow()  # Correction : utiliser un objet datetime
-        auth = AWSV4Auth(
-            access_key=ACCESS_KEY,
-            secret_key=SECRET_KEY,
-            partner_tag=ASSOCIATE_TAG,  # Correction : Add comma here
-            region='eu-west-1',
-            service='ProductAdvertisingAPI',
-            host='webservices.amazon.fr',
-            method_name='POST',
-            timestamp=timestamp  # Correction : passer un objet datetime
-        )
+        # Initialize the DefaultApi client
+        amazon_api = DefaultApi(api_client=client)
 
-        # Générer les en-têtes de la requête signée
-        headers = auth.get_headers()
-
-        # Mettre à jour les en-têtes du client API avec ceux générés
-        client.default_headers.update(headers)
-        print(f"[DEBUG] Headers used in request: {headers}")
-
-        # Créer une instance de DefaultApi
-        amazon_api = DefaultApi(client)
-
-        # Effectuer la requête
+        # Make the request and fetch the response
         response = amazon_api.search_items(search_request)
 
+        # Process the response
         if response and response.search_result and response.search_result.items:
             results = [
                 {
