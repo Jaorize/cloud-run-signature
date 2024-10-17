@@ -89,7 +89,7 @@ def amazon_search():
         auth = AWSV4Auth(
             access_key=ACCESS_KEY,
             secret_key=SECRET_KEY,
-            partner_tag=ASSOCIATE_TAG
+            partner_tag=ASSOCIATE_TAG,  # Correction : Add comma here
             region='eu-west-1',
             service='ProductAdvertisingAPI',
             host='webservices.amazon.fr',
@@ -99,7 +99,6 @@ def amazon_search():
 
         # Générer les en-têtes de la requête signée
         headers = auth.get_headers()
-
 
         # Mettre à jour les en-têtes du client API avec ceux générés
         client.default_headers.update(headers)
