@@ -38,16 +38,9 @@ def amazon_search():
         access_key=ACCESS_KEY, secret_key=SECRET_KEY, host=HOST, region=REGION
     )
 
-    # if not request.is_json:
-    #     return jsonify({"error": "Invalid Content-Type. Must be application/json"}), 400
-
-    # data = request.get_json()
-    # if data is None:
-    #     return jsonify({"error": "Empty or invalid JSON provided"}), 400
-    keywords = "laptop"
-    # keywords = data.get('keywords', '')
-    # if not keywords:
-    #     return jsonify({"error": "Keywords are required for searching"}), 400
+    keywords = request.args.get('keywords')
+    if not keywords:
+        raise ValueError("Missing keywords.")
 
     print(f"[DEBUG] Received keywords: {keywords}")
 
