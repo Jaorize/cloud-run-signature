@@ -25,33 +25,18 @@ app = Flask(__name__)
 ACCESS_KEY = os.getenv("ACCESS_KEY")
 SECRET_KEY = os.getenv("SECRET_KEY")
 ASSOCIATE_TAG = os.getenv("ASSOCIATE_TAG")
+HOST='webservices.amazon.fr'
+REGION='eu-west-1'
 
 # Check environment variables
 if not ACCESS_KEY or not SECRET_KEY or not ASSOCIATE_TAG:
     raise ValueError("Missing ACCESS_KEY, SECRET_KEY, or ASSOCIATE_TAG.")
 
-# Log retrieved environment variables for debugging
-print(f"ACCESS_KEY: {ACCESS_KEY}")
-print(f"SECRET_KEY: {SECRET_KEY}")
-print(f"ASSOCIATE_TAG: {ASSOCIATE_TAG}")
-
-# Initialize API client
-client = None
-
-def initialize_client():
-    global client
-    if client is None:
-        client = ApiClient(
-            access_key=ACCESS_KEY,
-            secret_key=SECRET_KEY,
-            host='webservices.amazon.fr',
-            region='eu-west-1'
-        )
-        print(f"[DEBUG] ApiClient initialized with access_key: {ACCESS_KEY}")
-
 @app.route('/search', methods=['GET'])
 def amazon_search():
-    initialize_client()
+    amazon_api = DefaultApi(
+        access_key=ACCESS_KEY, secret_key=SECRET_KEY, host=HOST, region=REGION
+    )
 
     # if not request.is_json:
     #     return jsonify({"error": "Invalid Content-Type. Must be application/json"}), 400
@@ -84,8 +69,7 @@ def amazon_search():
             resources=resources
         )
 
-        # Initialize the DefaultApi client
-        amazon_api = DefaultApi(api_client=client)
+
 
         # Make the request and fetch the response
         response = amazon_api.search_items(search_request)
