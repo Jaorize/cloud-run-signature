@@ -80,14 +80,14 @@ def amazon_search():
                 {
                     "title": item.item_info.title.display_value,
                     "url": item.detail_page_url,
-                    "price": item.offers.listings[0].price.display_amount if item.offers and item.offers.listings else 'N/A'
-                    "condition": item.offers.listings[0].condition if item.offers and item.offers.listings else 'N/A',
-                    "classifications": item.item_info.classifications.display_value if item.item_info.classifications else 'N/A',
-                    "star_rating": item.item_info.customer_reviews.star_rating if item.item_info.customer_reviews and item.item_info.customer_reviews.star_rating else 'N/A',
-                    "primary_image": item.images.primary.large.url if item.images and item.images.primary and item.images.primary.large else 'N/A',
-                    "sales_rank": item.browse_node_info.website_sales_rank.rank if item.browse_node_info and item.browse_node_info.website_sales_rank else 'N/A',
-                    "total_reviews": item.item_info.customer_reviews.total_review_count if item.item_info.customer_reviews and item.item_info.customer_reviews.total_review_count else 'N/A',
-                    "availability_type": item.offers.listings[0].availability.availability_type if item.offers and item.offers.listings and item.offers.listings[0].availability else 'N/A'
+                    "price": item.offers.listings[0].price.display_amount if item.offers and item.offers.listings else 'N/A',
+                    "condition": item.offers.listings[0].condition.value if item.offers and item.offers.listings and hasattr(item.offers.listings[0], 'condition') else 'N/A',
+                    "classifications": item.item_info.classifications.display_value if hasattr(item.item_info, 'classifications') else 'N/A',
+                    "star_rating": item.item_info.customer_reviews.star_rating if hasattr(item.item_info, 'customer_reviews') and item.item_info.customer_reviews.star_rating else 'N/A',
+                    "primary_image": item.images.primary.large.url if hasattr(item, 'images') and hasattr(item.images, 'primary') and hasattr(item.images.primary, 'large') else 'N/A',
+                    "sales_rank": item.browse_node_info.website_sales_rank.rank if hasattr(item, 'browse_node_info') and hasattr(item.browse_node_info, 'website_sales_rank') else 'N/A',
+                    "total_reviews": item.item_info.customer_reviews.total_review_count if hasattr(item.item_info, 'customer_reviews') and hasattr(item.item_info.customer_reviews, 'total_review_count') else 'N/A',
+                    "availability_type": item.offers.listings[0].availability.availability_type if item.offers and item.offers.listings and hasattr(item.offers.listings[0], 'availability') and hasattr(item.offers.listings[0].availability, 'availability_type') else 'N/A'
 
                 }
                 for item in response.search_result.items
