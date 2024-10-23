@@ -88,7 +88,7 @@ def amazon_search():
                     "sales_rank": item.browse_node_info.website_sales_rank.rank if item.browse_node_info and item.browse_node_info.website_sales_rank else 'N/A',
                     "total_reviews": item.item_info.customer_reviews.total_review_count if item.item_info.customer_reviews and item.item_info.customer_reviews.total_review_count else 'N/A',
                     "availability_type": item.offers.listings[0].availability.availability_type if item.offers and item.offers.listings and item.offers.listings[0].availability else 'N/A'
-            }
+
                 }
                 for item in response.search_result.items
             ]
