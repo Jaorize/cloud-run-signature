@@ -65,11 +65,7 @@ def amazon_search():
             partner_type=PartnerType.ASSOCIATES,
             keywords=keywords,
             search_index=request.args.get('search_index',default='All'),
-<<<<<<< HEAD
             item_count=10,
-=======
-            item_count=20,
->>>>>>> 9d11b37aad107f7f3c810e0982b4a751a2bcbec4
             resources=resources
         )
 
