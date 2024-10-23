@@ -82,7 +82,6 @@ def amazon_search():
                     "url": item.detail_page_url,
                     "price": item.offers.listings[0].price.display_amount if item.offers and item.offers.listings else 'N/A',
                     "condition": item.offers.listings[0].condition.value if item.offers and item.offers.listings and hasattr(item.offers.listings[0], 'condition') else 'N/A',
-                    "classifications": item.item_info.classifications.display_value if hasattr(item.item_info, 'classifications') else 'N/A',
                     "star_rating": item.item_info.customer_reviews.star_rating if hasattr(item.item_info, 'customer_reviews') and item.item_info.customer_reviews.star_rating else 'N/A',
                     "primary_image": item.images.primary.large.url if hasattr(item, 'images') and hasattr(item.images, 'primary') and hasattr(item.images.primary, 'large') else 'N/A',
                     "sales_rank": item.browse_node_info.website_sales_rank.rank if hasattr(item, 'browse_node_info') and hasattr(item.browse_node_info, 'website_sales_rank') else 'N/A',
