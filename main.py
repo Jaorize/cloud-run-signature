@@ -49,7 +49,14 @@ def amazon_search():
         resources = [
             SearchItemsResource.ITEMINFO_TITLE,
             SearchItemsResource.ITEMINFO_BYLINEINFO,
-            SearchItemsResource.OFFERS_LISTINGS_PRICE
+            SearchItemsResource.OFFERS_LISTINGS_PRICE,
+            SearchItemsResource.OFFERS_LISTINGS_CONDITION,
+            SearchItemsResource.ITEMINFO_CLASSIFICATIONS,
+            SearchItemsResource.CUSTOMERREVIEWS_STARRATING,
+            SearchItemsResource.IMAGES_PRIMARY_LARGE,
+            SearchItemsResource.BROWSENODEINFO_WEBSITESALESRANK,
+            SearchItemsResource.CUSTOMERREVIEWS_COUNT,
+            SearchItemsResource.OFFERS_LISTINGS_AVAILABILITY_TYPE
         ]
 
         # Create the search request
@@ -58,7 +65,7 @@ def amazon_search():
             partner_type=PartnerType.ASSOCIATES,
             keywords=keywords,
             search_index=request.args.get('search_index',default='All'),
-            item_count=50,
+            item_count=10,
             resources=resources
         )
 
