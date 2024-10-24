@@ -4,6 +4,8 @@ from datetime import datetime
 from flask import Flask, request, jsonify
 from dotenv import load_dotenv
 
+from paapi5_python_sdk import Availability
+
 load_dotenv()  # take environment variables from .env.
 # Add SDK path to PYTHONPATH
 sdk_path = os.path.abspath(os.path.join(os.path.dirname(__file__), 'sdk'))
@@ -66,7 +68,9 @@ def amazon_search():
             keywords=keywords,
             search_index=request.args.get('search_index',default='All'),
             item_count=10,
-            resources=resources
+            resources=resources,
+            availability=Availability.AVAILABLE
+
         )
 
 
@@ -82,6 +86,7 @@ def amazon_search():
                     "url": item.detail_page_url,
                     "price": item.offers.listings[0].price.display_amount if item.offers and item.offers.listings else 'N/A',
                     "primary_image": item.images.primary.large.url if hasattr(item, 'images') and hasattr(item.images, 'primary') and hasattr(item.images.primary, 'large') else 'N/A',
+                    "Availability": item.offers.
 
 
                 }
