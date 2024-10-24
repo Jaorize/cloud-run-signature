@@ -69,7 +69,8 @@ def amazon_search():
             search_index=request.args.get('search_index',default='All'),
             item_count=10,
             resources=resources,
-            availability=Availability.AVAILABLE
+            availability=Availability.AVAILABLE,
+            delivery_flags=["prime"]
 
         )
 
