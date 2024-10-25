@@ -61,7 +61,7 @@ def amazon_search():
             SearchItemsResource.OFFERS_LISTINGS_AVAILABILITY_TYPE,
             SearchItemsResource.OFFERS_LISTINGS_DELIVERYINFO_ISPRIMEELIGIBLE
         ]
-    try:
+
         total_results = []
         desired_total = 100  # Nombre total de résultats souhaité
         results_per_page = 10  # Nombre de résultats par page (maximum possible)
