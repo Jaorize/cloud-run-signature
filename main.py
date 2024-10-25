@@ -4,7 +4,7 @@ from datetime import datetime
 from flask import Flask, request, jsonify
 from dotenv import load_dotenv
 
-from paapi5_python_sdk import Availability, DeliveryFlag
+from paapi5_python_sdk import Availability, DeliveryFlag, MinPrice
 
 load_dotenv()  # take environment variables from .env.
 # Add SDK path to PYTHONPATH
@@ -71,7 +71,9 @@ def amazon_search():
             item_count=10,
             resources=resources,
             availability=Availability.AVAILABLE,
-            delivery_flags=[DeliveryFlag.PRIME]
+            delivery_flags=[DeliveryFlag.PRIME],
+            min_price=30000
+
 
         )
 
