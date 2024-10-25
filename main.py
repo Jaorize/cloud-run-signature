@@ -72,7 +72,7 @@ def amazon_search():
             resources=resources,
             availability=Availability.AVAILABLE,
             delivery_flags=[DeliveryFlag.PRIME],
-            min_price=30000
+            min_price=3000
 
 
         )
