@@ -61,47 +61,61 @@ def amazon_search():
             SearchItemsResource.OFFERS_LISTINGS_AVAILABILITY_TYPE,
             SearchItemsResource.OFFERS_LISTINGS_DELIVERYINFO_ISPRIMEELIGIBLE
         ]
+    try:
+        total_results = []
+        desired_total = 100  # Nombre total de résultats souhaité
+        results_per_page = 10  # Nombre de résultats par page (maximum possible)
+        pages_needed = desired_total // results_per_page  # Nombre de pages requis
 
-        # Create the search request
-        search_request = SearchItemsRequest(
-            partner_tag=ASSOCIATE_TAG,
-            partner_type=PartnerType.ASSOCIATES,
-            keywords=keywords,
-            search_index=request.args.get('search_index',default='All'),
-            item_count=10,
-            resources=resources,
-            availability=Availability.AVAILABLE,
-            delivery_flags=[DeliveryFlag.PRIME],
-            min_price=3000
+        for page in range(1, pages_needed + 1):
+            # Créer la requête de recherche pour chaque page
+            search_request = SearchItemsRequest(
+                partner_tag=ASSOCIATE_TAG,
+                partner_type=PartnerType.ASSOCIATES,
+                keywords=keywords,
+                search_index=request.args.get('search_index', default='All'),
+                item_count=results_per_page,
+                item_page=page,  # Utilisation du paramètre de pagination
+                resources=resources,
+                availability=Availability.AVAILABLE,
+                delivery_flags=[DeliveryFlag.PRIME],
+                min_price=3000  # Exemple de filtre de prix pour 30 EUR minimum
+            )
 
+            # Faire la requête et récupérer la réponse
+            response = amazon_api.search_items(search_request)
 
-        )
+            # Traiter la réponse
+            if response and response.search_result and response.search_result.items:
+                results = [
+                    {
+                        "title": item.item_info.title.display_value,
+                        "url": item.detail_page_url,
+                        "price": item.offers.listings[
+                            0].price.display_amount if item.offers and item.offers.listings else 'N/A',
+                        "primary_image": item.images.primary.large.url if hasattr(item, 'images') and hasattr(
+                            item.images, 'primary') and hasattr(item.images.primary, 'large') else 'N/A',
+                        "prime_eligible": any(
+                            listing.delivery_info.is_prime_eligible
+                            for listing in item.offers.listings
+                            if listing is not None and listing.delivery_info is not None
+                        ) if item.offers and item.offers.listings else False
+                    }
+                    for item in response.search_result.items
+                    if item.offers and item.offers.listings and item.offers.listings[0].price.amount >= 30
+                    # Filtre de prix en EUR
+                ]
+                total_results.extend(results)  # Ajoute les résultats de cette page
 
+            # Arrête la boucle si le nombre de résultats souhaité est atteint
+            if len(total_results) >= desired_total:
+                break
 
+        # Limite à 100 résultats uniques maximum
+        total_results = total_results[:desired_total]
 
-        # Make the request and fetch the response
-        response = amazon_api.search_items(search_request)
-
-        # Process the response
-        if response and response.search_result and response.search_result.items:
-            results = [
-                {
-                    "title": item.item_info.title.display_value,
-                    "url": item.detail_page_url,
-                    "price": item.offers.listings[0].price.display_amount if item.offers and item.offers.listings else 'N/A',
-                    "primary_image": item.images.primary.large.url if hasattr(item, 'images') and hasattr(item.images, 'primary') and hasattr(item.images.primary, 'large') else 'N/A',
-                    "prime_eligible": any(
-                        listing.delivery_info.is_prime_eligible
-                        for listing in item.offers.listings
-                        if listing is not None and listing.delivery_info is not None
-                    ) if item.offers and item.offers.listings else False
-                }
-
-                for item in response.search_result.items
-            ]
-            return jsonify(results), 200
-        else:
-            return jsonify({"message": "No results found"}), 404
+        # Retourne les résultats finaux sous forme de JSON
+        return jsonify(total_results), 200
 
     except ApiException as e:
         print(f"[ERROR] API Exception: {str(e)}")
@@ -109,6 +123,7 @@ def amazon_search():
     except Exception as e:
         print(f"[ERROR] General Exception: {str(e)}")
         return jsonify({"error": f"An unexpected error occurred. {str(e)}"}), 500
+
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=8080)
