@@ -58,7 +58,8 @@ def amazon_search():
             SearchItemsResource.IMAGES_PRIMARY_LARGE,
             SearchItemsResource.BROWSENODEINFO_WEBSITESALESRANK,
             SearchItemsResource.CUSTOMERREVIEWS_COUNT,
-            SearchItemsResource.OFFERS_LISTINGS_AVAILABILITY_TYPE
+            SearchItemsResource.OFFERS_LISTINGS_AVAILABILITY_TYPE,
+            SearchItemsResource.OFFERS_LISTINGS_DELIVERYINFO_ISPRIMEELIGIBLE
         ]
 
         # Create the search request
@@ -88,9 +89,9 @@ def amazon_search():
                     "price": item.offers.listings[0].price.display_amount if item.offers and item.offers.listings else 'N/A',
                     "primary_image": item.images.primary.large.url if hasattr(item, 'images') and hasattr(item.images, 'primary') and hasattr(item.images.primary, 'large') else 'N/A',
                     "prime_eligible": any(
-                        listing.DeliveryInfo.IsPrimeEligible
+                        listing.delivery_info.is_prime_eligible
                         for listing in item.offers.listings
-                        if listing is not None and listing.DeliveryInfo is not None
+                        if listing is not None and listing.delivery_info is not None
                     ) if item.offers and item.offers.listings else False
                 }
 
