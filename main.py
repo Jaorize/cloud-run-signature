@@ -70,7 +70,7 @@ def amazon_search():
             item_count=10,
             resources=resources,
             availability=Availability.AVAILABLE,
-
+            delivery_flags=[DeliveryFlag.PRIME]
 
         )
 
