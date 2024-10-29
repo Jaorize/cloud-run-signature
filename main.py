@@ -95,6 +95,8 @@ def amazon_search():
                             0].price.display_amount if item.offers and item.offers.listings else 'N/A',
                         "primary_image": item.images.primary.large.url if hasattr(item, 'images') and hasattr(
                             item.images, 'primary') and hasattr(item.images.primary, 'large') else 'N/A',
+                        "ean":item.item_info.product_info.ean.display_value if hasattr(item.item_info, 'product_info') and hasattr(
+                item.item_info.product_info, 'ean') else 'N/A',
                         "prime_eligible": any(
                             listing.delivery_info.is_prime_eligible
                             for listing in item.offers.listings
@@ -102,7 +104,7 @@ def amazon_search():
                         ) if item.offers and item.offers.listings else False
                     }
                     for item in response.search_result.items
-                    if item.offers and item.offers.listings and item.offers.listings[0].price.amount >= 30
+                    if item.offers and item.offers.listings and item.offers.listings[0].price.amount >= 25
                     # Filtre de prix en EUR
                 ]
                 total_results.extend(results)  # Ajoute les résultats de cette page
