@@ -59,7 +59,8 @@ def amazon_search():
             SearchItemsResource.BROWSENODEINFO_WEBSITESALESRANK,
             SearchItemsResource.CUSTOMERREVIEWS_COUNT,
             SearchItemsResource.OFFERS_LISTINGS_AVAILABILITY_TYPE,
-            SearchItemsResource.OFFERS_LISTINGS_DELIVERYINFO_ISPRIMEELIGIBLE
+            SearchItemsResource.OFFERS_LISTINGS_DELIVERYINFO_ISPRIMEELIGIBLE,
+            SearchItemsResource.ITEMINFO_EXTERNALIDS
         ]
 
         total_results = []
