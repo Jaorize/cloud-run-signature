@@ -79,7 +79,7 @@ def amazon_search():
                 resources=resources,
                 availability=Availability.AVAILABLE,
                 delivery_flags=[DeliveryFlag.PRIME],
-                min_price=3000  # Exemple de filtre de prix pour 30 EUR minimum
+                min_price=2500  # Exemple de filtre de prix pour 30 EUR minimum
             )
 
             # Faire la requête et récupérer la réponse
