@@ -1,5 +1,6 @@
 import os
 import sys
+import time
 from datetime import datetime
 from flask import Flask, request, jsonify
 from dotenv import load_dotenv
@@ -84,6 +85,8 @@ def amazon_search():
             # Faire la requête et récupérer la réponse
             response = amazon_api.search_items(search_request)
 
+            time.sleep(15)
+            
             # Traiter la réponse
             if response and response.search_result and response.search_result.items:
                 results = [
