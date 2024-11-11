@@ -117,8 +117,8 @@ def amazon_search():
             if len(total_results) >= desired_total:
                 break
 
-	    time.sleep(1)
-	
+	        time.sleep(1)
+
         # Limite à 100 résultats uniques maximum
         total_results = total_results[:desired_total]
 
