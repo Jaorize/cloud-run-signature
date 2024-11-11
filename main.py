@@ -1,6 +1,6 @@
 import os
 import sys
-import time  # Importez la bibliothèque time pour le délai
+import time
 from datetime import datetime
 from flask import Flask, request, jsonify
 from dotenv import load_dotenv
@@ -84,38 +84,54 @@ def amazon_search():
                 min_price=2500  # Exemple de filtre de prix pour 30 EUR minimum
             )
 
-            # Faire la requête et récupérer la réponse
-            response = amazon_api.search_items(search_request)
+            # Gestion du throttling avec tentatives multiples
+            attempts = 0
+            max_attempts = 3
+            success = False
+            while attempts < max_attempts and not success:
+                try:
+                    # Faire la requête et récupérer la réponse
+                    response = amazon_api.search_items(search_request)
+                    success = True  # La requête a réussi, on peut continuer
 
-            # Traiter la réponse
-            if response and response.search_result and response.search_result.items:
-                results = [
-                    {
-                        "title": item.item_info.title.display_value,
-                        "url": item.detail_page_url,
-                        "price": item.offers.listings[
-                            0].price.display_amount if item.offers and item.offers.listings else 'N/A',
-                        "primary_image": item.images.primary.large.url if hasattr(item, 'images') and hasattr(
-                            item.images, 'primary') and hasattr(item.images.primary, 'large') else 'N/A',
-                        "ASIN": item.asin,
-                        "prime_eligible": any(
-                            listing.delivery_info.is_prime_eligible
-                            for listing in item.offers.listings
-                            if listing is not None and listing.delivery_info is not None
-                        ) if item.offers and item.offers.listings else False
-                    }
-                    for item in response.search_result.items
-                    if item.offers and item.offers.listings and item.offers.listings[0].price.amount >= 25
-                    # Filtre de prix en EUR
-                ]
-                total_results.extend(results)  # Ajoute les résultats de cette page
+                    # Traiter la réponse
+                    if response and response.search_result and response.search_result.items:
+                        results = [
+                            {
+                                "title": item.item_info.title.display_value,
+                                "url": item.detail_page_url,
+                                "price": item.offers.listings[
+                                    0].price.display_amount if item.offers and item.offers.listings else 'N/A',
+                                "primary_image": item.images.primary.large.url if hasattr(item, 'images') and hasattr(
+                                    item.images, 'primary') and hasattr(item.images.primary, 'large') else 'N/A',
+                                "ASIN": item.asin,
+                                "prime_eligible": any(
+                                    listing.delivery_info.is_prime_eligible
+                                    for listing in item.offers.listings
+                                    if listing is not None and listing.delivery_info is not None
+                                ) if item.offers and item.offers.listings else False
+                            }
+                            for item in response.search_result.items
+                            if item.offers and item.offers.listings and item.offers.listings[0].price.amount >= 25
+                            # Filtre de prix en EUR
+                        ]
+                        total_results.extend(results)  # Ajoute les résultats de cette page
+
+                except ApiException as e:
+                    if e.status == 429:  # Code d'erreur pour "Too Many Requests"
+                        print(f"[ERROR] Too Many Requests - waiting to retry (Attempt {attempts + 1}/{max_attempts})")
+                        attempts += 1
+                        time.sleep(10)  # Attente de 10 secondes avant de réessayer
+                    else:
+                        # Pour les autres types d'erreurs, sortez de la boucle
+                        raise
 
             # Arrête la boucle si le nombre de résultats souhaité est atteint
             if len(total_results) >= desired_total:
                 break
 
-            # Pause de 1 seconde entre les requêtes pour respecter la limite de taux de l'API
-            time.sleep(1)
+            # Pause de 5 secondes entre les pages pour éviter de saturer le service
+            time.sleep(5)
 
         # Limite à 100 résultats uniques maximum
         total_results = total_results[:desired_total]
