@@ -1,19 +1,19 @@
 import os
 import sys
-import time
+import time  # Importez la bibliothèque time pour le délai
 from datetime import datetime
 from flask import Flask, request, jsonify
 from dotenv import load_dotenv
 
 from paapi5_python_sdk import Availability, DeliveryFlag, MinPrice
 
-load_dotenv()  # take environment variables from .env.
-# Add SDK path to PYTHONPATH
+load_dotenv()  # Récupère les variables d'environnement à partir de .env.
+# Ajouter le chemin SDK à PYTHONPATH
 sdk_path = os.path.abspath(os.path.join(os.path.dirname(__file__), 'sdk'))
 if sdk_path not in sys.path:
     sys.path.append(sdk_path)
 
-# Import necessary modules from SDK
+# Importer les modules nécessaires du SDK
 from paapi5_python_sdk.api_client import ApiClient
 from paapi5_python_sdk.api.default_api import DefaultApi
 from paapi5_python_sdk.models.search_items_request import SearchItemsRequest
@@ -21,17 +21,17 @@ from paapi5_python_sdk.models.partner_type import PartnerType
 from paapi5_python_sdk.models.search_items_resource import SearchItemsResource
 from paapi5_python_sdk.rest import ApiException
 
-# Initialize Flask app
+# Initialisation de l'application Flask
 app = Flask(__name__)
 
-# Retrieve environment variables
+# Récupérer les variables d'environnement
 ACCESS_KEY = os.getenv("ACCESS_KEY")
 SECRET_KEY = os.getenv("SECRET_KEY")
 ASSOCIATE_TAG = os.getenv("ASSOCIATE_TAG")
-HOST='webservices.amazon.fr'
-REGION='eu-west-1'
+HOST = 'webservices.amazon.fr'
+REGION = 'eu-west-1'
 
-# Check environment variables
+# Vérifier les variables d'environnement
 if not ACCESS_KEY or not SECRET_KEY or not ASSOCIATE_TAG:
     raise ValueError("Missing ACCESS_KEY, SECRET_KEY, or ASSOCIATE_TAG.")
 
@@ -48,7 +48,7 @@ def amazon_search():
     print(f"[DEBUG] Received keywords: {keywords}")
 
     try:
-        # Define the resources needed for search
+        # Définir les ressources nécessaires pour la recherche
         resources = [
             SearchItemsResource.ITEMINFO_TITLE,
             SearchItemsResource.ITEMINFO_BYLINEINFO,
@@ -61,9 +61,7 @@ def amazon_search():
             SearchItemsResource.CUSTOMERREVIEWS_COUNT,
             SearchItemsResource.OFFERS_LISTINGS_AVAILABILITY_TYPE,
             SearchItemsResource.OFFERS_LISTINGS_DELIVERYINFO_ISPRIMEELIGIBLE,
-            SearchItemsResource.ITEMINFO_EXTERNALIDS,
-            SearchItemsResource.SEARCHREFINEMENTS,
-            SearchItemsResource
+            SearchItemsResource.ITEMINFO_EXTERNALIDS
         ]
 
         total_results = []
@@ -105,7 +103,6 @@ def amazon_search():
                             for listing in item.offers.listings
                             if listing is not None and listing.delivery_info is not None
                         ) if item.offers and item.offers.listings else False
-                        "SearchRefinements":
                     }
                     for item in response.search_result.items
                     if item.offers and item.offers.listings and item.offers.listings[0].price.amount >= 25
@@ -117,7 +114,8 @@ def amazon_search():
             if len(total_results) >= desired_total:
                 break
 
-	        time.sleep(1)
+            # Pause de 1 seconde entre les requêtes pour respecter la limite de taux de l'API
+            time.sleep(1)
 
         # Limite à 100 résultats uniques maximum
         total_results = total_results[:desired_total]
