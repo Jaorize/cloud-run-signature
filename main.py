@@ -85,8 +85,8 @@ def amazon_search():
             # Faire la requête et récupérer la réponse
             response = amazon_api.search_items(search_request)
 
-            time.sleep(15)
-            
+
+
             # Traiter la réponse
             if response and response.search_result and response.search_result.items:
                 results = [
@@ -110,6 +110,7 @@ def amazon_search():
                 ]
                 total_results.extend(results)  # Ajoute les résultats de cette page
 
+            time.sleep(5)
             # Arrête la boucle si le nombre de résultats souhaité est atteint
             if len(total_results) >= desired_total:
                 break
