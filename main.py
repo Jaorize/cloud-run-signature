@@ -1,5 +1,6 @@
 import os
 import sys
+import time
 from datetime import datetime
 from flask import Flask, request, jsonify
 from dotenv import load_dotenv
@@ -60,7 +61,9 @@ def amazon_search():
             SearchItemsResource.CUSTOMERREVIEWS_COUNT,
             SearchItemsResource.OFFERS_LISTINGS_AVAILABILITY_TYPE,
             SearchItemsResource.OFFERS_LISTINGS_DELIVERYINFO_ISPRIMEELIGIBLE,
-            SearchItemsResource.ITEMINFO_EXTERNALIDS
+            SearchItemsResource.ITEMINFO_EXTERNALIDS,
+            SearchItemsResource.SEARCHREFINEMENTS,
+            SearchItemsResource
         ]
 
         total_results = []
@@ -102,6 +105,7 @@ def amazon_search():
                             for listing in item.offers.listings
                             if listing is not None and listing.delivery_info is not None
                         ) if item.offers and item.offers.listings else False
+                        "SearchRefinements":
                     }
                     for item in response.search_result.items
                     if item.offers and item.offers.listings and item.offers.listings[0].price.amount >= 25
@@ -113,6 +117,8 @@ def amazon_search():
             if len(total_results) >= desired_total:
                 break
 
+	    time.sleep(1)
+	
         # Limite à 100 résultats uniques maximum
         total_results = total_results[:desired_total]
 
