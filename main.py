@@ -54,8 +54,6 @@ def amazon_search():
             SearchItemsResource.ITEMINFO_BYLINEINFO,
             SearchItemsResource.OFFERS_LISTINGS_PRICE,
             SearchItemsResource.OFFERS_LISTINGS_CONDITION,
-            SearchItemsResource.ITEMINFO_CLASSIFICATIONS,
-            SearchItemsResource.CUSTOMERREVIEWS_STARRATING,
             SearchItemsResource.IMAGES_PRIMARY_LARGE,
             SearchItemsResource.BROWSENODEINFO_WEBSITESALESRANK,
             SearchItemsResource.CUSTOMERREVIEWS_COUNT,
