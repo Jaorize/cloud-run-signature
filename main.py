@@ -63,7 +63,7 @@ def amazon_search():
         ]
 
         total_results = []
-        desired_total = 50  # Nombre total de résultats souhaité
+        desired_total = 100  # Nombre total de résultats souhaité
         results_per_page = 10  # Nombre de résultats par page (maximum possible)
         pages_needed = desired_total // results_per_page  # Nombre de pages requis
 
