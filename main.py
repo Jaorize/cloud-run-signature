@@ -1,6 +1,6 @@
+
 import os
 import sys
-import time
 from datetime import datetime
 from flask import Flask, request, jsonify
 from dotenv import load_dotenv
@@ -54,8 +54,10 @@ def amazon_search():
             SearchItemsResource.ITEMINFO_BYLINEINFO,
             SearchItemsResource.OFFERS_LISTINGS_PRICE,
             SearchItemsResource.OFFERS_LISTINGS_CONDITION,
+            SearchItemsResource.ITEMINFO_CLASSIFICATIONS,
             SearchItemsResource.CUSTOMERREVIEWS_STARRATING,
             SearchItemsResource.IMAGES_PRIMARY_LARGE,
+            SearchItemsResource.BROWSENODEINFO_WEBSITESALESRANK,
             SearchItemsResource.CUSTOMERREVIEWS_COUNT,
             SearchItemsResource.OFFERS_LISTINGS_AVAILABILITY_TYPE,
             SearchItemsResource.OFFERS_LISTINGS_DELIVERYINFO_ISPRIMEELIGIBLE,
@@ -85,8 +87,6 @@ def amazon_search():
             # Faire la requête et récupérer la réponse
             response = amazon_api.search_items(search_request)
 
-
-
             # Traiter la réponse
             if response and response.search_result and response.search_result.items:
                 results = [
@@ -98,6 +98,7 @@ def amazon_search():
                         "primary_image": item.images.primary.large.url if hasattr(item, 'images') and hasattr(
                             item.images, 'primary') and hasattr(item.images.primary, 'large') else 'N/A',
                         "ASIN":item.asin
+                        "ASIN": item.asin,
                         "prime_eligible": any(
                             listing.delivery_info.is_prime_eligible
                             for listing in item.offers.listings
@@ -110,7 +111,6 @@ def amazon_search():
                 ]
                 total_results.extend(results)  # Ajoute les résultats de cette page
 
-            time.sleep(5)
             # Arrête la boucle si le nombre de résultats souhaité est atteint
             if len(total_results) >= desired_total:
                 break
