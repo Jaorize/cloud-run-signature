@@ -96,8 +96,7 @@ def amazon_search():
                         "price": item.offers.listings[
                             0].price.display_amount if item.offers and item.offers.listings else 'N/A',
                         "primary_image": item.images.primary.large.url if hasattr(item, 'images') and hasattr(
-                            item.images, 'primary') and hasattr(item.images.primary, 'large') else 'N/A',
-                        "ASIN":item.asin
+                            item.images, 'primary') and hasattr(item.images.primary, 'large') else 'N/A',                        
                         "ASIN": item.asin,
                         "prime_eligible": any(
                             listing.delivery_info.is_prime_eligible
